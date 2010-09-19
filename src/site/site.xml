@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="GoldenGate Exec">
+  <publishDate/><version/>
+  <bannerLeft>
+    <name>GoldenGate Project</name>
+    <src>images/goldengatesmall.jpg</src>
+    <href>http://openr66.free.fr/</href>
+  </bannerLeft>
+  <body>
+    <links>
+    	<item name="GoldenGate" href="http://openr66.free.fr/"/>
+    </links>
+  	<menu name="GoldenGate Exec">
+  		<item name="Overview of GoldenGate Exec" href="index.html"/>
+  		<item name="Configuration of GoldenGate Exec Server and Clients" href="configuration.html"/>
+  		<item name="Commands for GoldenGate Exec Server and Clients" href="commands.html"/>
+  		<item name="Main page of GoldenGate Exec" href="../GoldenGateExec.html"/>
+  		<item name="GoldenGate Main Project" href="../"/>
+  	</menu>
+    <menu ref="reports"/>
+  </body>
+</project>
