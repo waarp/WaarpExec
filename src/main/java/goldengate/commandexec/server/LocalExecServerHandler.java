@@ -42,12 +42,12 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 
 /**
- * Handles a server-side channel.
+ * Handles a server-side channel for LocalExec.
  *
  *
  */
 public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
-
+    // Fixed delay, but could change if necessary at construction
     private long delay = LocalExecDefaultResult.MAXWAITPROCESS;
     /**
      * Internal Logger
@@ -55,9 +55,24 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
     private static final GgInternalLogger logger = GgInternalLoggerFactory
             .getLogger(LocalExecServerHandler.class);
 
+    /**
+     * Constructor with a specific delay
+     * @param newdelay
+     */
+    public LocalExecServerHandler(long newdelay) {
+        delay = newdelay;
+    }
+
+    /**
+     * Change the delay to the specific value. Need to be called before any receive message.
+     * @param newdelay
+     */
+    public void setNewDelay(long newdelay) {
+        delay = newdelay;
+    }
+
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent evt) {
-
         // Cast to a String first.
         // We know it is a String because we put some codec in
         // LocalExecPipelineFactory.
@@ -70,12 +85,14 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
         ExecuteWatchdog watchdog = null;
         try {
             if (request.length() == 0) {
+                // No command
                 response = LocalExecDefaultResult.NoCommand.status+" "+
                     LocalExecDefaultResult.NoCommand.result;
             } else {
                 String[] args = request.split(" ");
                 File exec = new File(args[0]);
                 if (exec.isAbsolute()) {
+                    // If true file, is it executable
                     if (! exec.canExecute()) {
                         logger.error("Exec command is not executable: " + request);
                         response = LocalExecDefaultResult.NotExecutable.status+" "+
@@ -83,6 +100,7 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                         return;
                     }
                 }
+                // Create command with parameters
                 CommandLine commandLine = new CommandLine(args[0]);
                 for (int i = 1; i < args.length; i ++) {
                     commandLine.addArgument(args[i]);
@@ -95,11 +113,13 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                 int[] correctValues = { 0, 1 };
                 defaultExecutor.setExitValues(correctValues);
                 if (delay > 0) {
+                    // If delay (max time), then setup Watchdog
                     watchdog = new ExecuteWatchdog(delay);
                     defaultExecutor.setWatchdog(watchdog);
                 }
                 int status = -1;
                 try {
+                    // Execute the command
                     status = defaultExecutor.execute(commandLine);
                 } catch (ExecuteException e) {
                     if (e.getExitValue() == -559038737) {
@@ -184,6 +204,7 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
             if (watchdog != null) {
                 watchdog.stop();
             }
+            // Close connection after each execution
             future.addListener(ChannelFutureListener.CLOSE);
         }
     }
@@ -192,6 +213,8 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
         logger.error("Unexpected exception from downstream.", e
                 .getCause());
+        // Nothing to do since execution will stop later on and an error will occur on client side
+        // since no message arrived before close (or partially)
         e.getChannel().close();
     }
 }

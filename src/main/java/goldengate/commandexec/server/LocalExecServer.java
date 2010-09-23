@@ -20,6 +20,7 @@
  */
 package goldengate.commandexec.server;
 
+import goldengate.commandexec.utils.LocalExecDefaultResult;
 import goldengate.common.logging.GgSlf4JLoggerFactory;
 
 import java.net.InetAddress;
@@ -34,7 +35,7 @@ import org.jboss.netty.logging.InternalLoggerFactory;
 import ch.qos.logback.classic.Level;
 
 /**
- * LocalExec server.
+ * LocalExec server Main method.
  *
  *
  */
@@ -43,9 +44,30 @@ public class LocalExecServer {
     static ExecutorService threadPool;
     static ExecutorService threadPool2;
 
+    /**
+     * Takes 3 optional arguments:<br>
+     * - no argument: implies localhost + 9999 port<br>
+     * - arguments:<br>
+     *  "addresse" "port"<br>
+     *  "addresse" "port" "default delay"<br>
+     * @param args
+     * @throws Exception
+     */
     public static void main(String[] args) throws Exception {
         InternalLoggerFactory.setDefaultFactory(new GgSlf4JLoggerFactory(
                 Level.WARN));
+        int port = 9999;
+        InetAddress addr;
+        long delay = LocalExecDefaultResult.MAXWAITPROCESS;
+        if (args.length >=2) {
+            addr = InetAddress.getByName(args[0]);
+            port = Integer.parseInt(args[1]);
+            if (args.length > 2) {
+                delay = Long.parseLong(args[2]);
+            }
+        } else {
+            addr = InetAddress.getLocalHost();
+        }
         threadPool = Executors.newCachedThreadPool();
         threadPool2 = Executors.newCachedThreadPool();
         // Configure the server.
@@ -53,11 +75,9 @@ public class LocalExecServer {
                 new NioServerSocketChannelFactory(threadPool, threadPool2));
 
         // Configure the pipeline factory.
-        bootstrap.setPipelineFactory(new LocalExecServerPipelineFactory());
+        bootstrap.setPipelineFactory(new LocalExecServerPipelineFactory(delay));
 
         // Bind and start to accept incoming connections only on local address.
-        byte[] local = {127, 0, 0, 1 };
-        InetAddress addr = InetAddress.getByAddress(local);
-        bootstrap.bind(new InetSocketAddress(addr, 9999));
+        bootstrap.bind(new InetSocketAddress(addr, port));
     }
 }

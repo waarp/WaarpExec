@@ -21,6 +21,7 @@
 package goldengate.commandexec.server;
 
 import static org.jboss.netty.channel.Channels.*;
+import goldengate.commandexec.utils.LocalExecDefaultResult;
 
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
@@ -30,11 +31,30 @@ import org.jboss.netty.handler.codec.string.StringDecoder;
 import org.jboss.netty.handler.codec.string.StringEncoder;
 
 /**
- * Creates a newly configured {@link ChannelPipeline} for a new channel.
+ * Creates a newly configured {@link ChannelPipeline} for a new channel for LocalExecServer.
  *
  *
  */
 public class LocalExecServerPipelineFactory implements ChannelPipelineFactory {
+
+    private long delay = LocalExecDefaultResult.MAXWAITPROCESS;
+
+    /**
+     * Constructor with default delay
+     * @param newdelay
+     */
+    public LocalExecServerPipelineFactory() {
+        // Default delay
+    }
+
+    /**
+     * Constructor with a specific default delay
+     * @param newdelay
+     */
+    public LocalExecServerPipelineFactory(long newdelay) {
+        delay = newdelay;
+    }
+
 
     public ChannelPipeline getPipeline() throws Exception {
         // Create a default pipeline implementation.
@@ -47,7 +67,8 @@ public class LocalExecServerPipelineFactory implements ChannelPipelineFactory {
         pipeline.addLast("encoder", new StringEncoder());
 
         // and then business logic.
-        pipeline.addLast("handler", new LocalExecServerHandler());
+        // Could change it with a new fixed delay if necessary at construction
+        pipeline.addLast("handler", new LocalExecServerHandler(delay));
 
         return pipeline;
     }
