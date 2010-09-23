@@ -33,7 +33,7 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 
 /**
- * Handles a client-side channel.
+ * Handles a client-side channel for LocalExec
  *
  *
  */
@@ -52,12 +52,21 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
 
     private GgFuture future;
 
+    /**
+     * Constructor
+     */
     public LocalExecClientHandler() {
         this.back = new StringBuilder();
         this.future = new GgFuture(true);
     }
 
-    /* (non-Javadoc)
+    /**
+     * When closed, <br>
+     * If no messaged were received => NoMessage error is set to future<br>
+     * Else if an error was detected => Set the future to error (with or without exception)<br>
+     * Else if no error occurs => Set success to the future<br>
+     *
+     *
      * @see org.jboss.netty.channel.SimpleChannelUpstreamHandler#channelClosed(org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.ChannelStateEvent)
      */
     @Override
@@ -82,7 +91,10 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
         super.channelClosed(ctx, e);
     }
 
-    // Waiting for the close of the exec
+    /**
+     * Waiting for the close of the exec
+     * @return The LocalExecResult
+     */
     public LocalExecResult waitFor() {
         this.future.awaitUninterruptibly();
         result.isSuccess = this.future.isSuccess();
@@ -94,6 +106,7 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
         // Add the line received from the server.
         String mesg = (String) e.getMessage();
         logger.debug("Recv: "+mesg);
+        // If first message, then take the status and then the message
         if (firstMessage) {
             firstMessage = false;
             int pos = mesg.indexOf(' ');
