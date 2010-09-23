@@ -21,6 +21,7 @@
 package goldengate.commandexec.utils;
 
 /**
+ * Default message for LocalExec
  * @author Frederic Bregier
  *
  */

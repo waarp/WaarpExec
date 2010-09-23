@@ -21,6 +21,8 @@
 package goldengate.commandexec.utils;
 
 /**
+ * Message Result for an Execution
+ *
  * @author Frederic Bregier
  *
  */
@@ -41,12 +43,20 @@ public class LocalExecResult {
         this.result = result;
     }
 
+    /**
+     * Constructor from a pre-existing LocalExecResult
+     * @param localExecResult
+     */
     public LocalExecResult(LocalExecResult localExecResult) {
         this.isSuccess = localExecResult.isSuccess;
         this.status = localExecResult.status;
         this.exception = localExecResult.exception;
         this.result = localExecResult.result;
     }
+    /**
+     * Set the values from a LocalExecResult (pointer copy)
+     * @param localExecResult
+     */
     public void set(LocalExecResult localExecResult) {
         this.isSuccess = localExecResult.isSuccess;
         this.status = localExecResult.status;
