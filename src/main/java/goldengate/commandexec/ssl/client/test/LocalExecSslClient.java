@@ -47,32 +47,9 @@ import ch.qos.logback.classic.Level;
  *
  * This class is an example of client.
  *
- * On a bi-core Centrino2 vPro: 5/s in 50 sequential, 29/s in 10 threads with 50 sequential
+ * No client authentication On a bi-core Centrino2 vPro: 5/s in 50 sequential, 29/s in 10 threads with 50 sequential<br>
+ * With client authentication On a bi-core Centrino2 vPro: 3/s in 50 sequential, 27/s in 10 threads with 50 sequential
  *
- * Usage:<br>
- * <ul><li>First create the SecureKeyStore (only once):<br>
- *      new GgSecureKeyStore(
- *      keyStoreFilename, _keyStorePasswd, _keyPassword,
- *      trustStoreFilename, _trustStorePasswd);</li>
- * <li>Create the GgSslContextFactory (only once)<br>
- * new GgSslContextFactory(ggSecureKeyStore);</li>
- * <li>Then once initialized, use it within the PipelineFactory:<br>
- *      pipeline.addLast("ssl",
- *              ggSslContextFactory.initPipelineFactory(serverMode,
- *              true, executorService));</li>
- * </ul>
- * <br>
- * If no authorization is needed, then Usage is:<br>
- * <ul><li>First create the SecureKeyStore (only once):<br>
- *      new GgSecureKeyStore(
- *      keyStoreFilename, _keyStorePasswd, _keyPassword);</li>
- * <li>Create the GgSslContextFactory (only once)<br>
- * new GgSslContextFactory(ggSecureKeyStore);</li>
- * <li>Then once initialized, use it within the PipelineFactory:<br>
- *      pipeline.addLast("ssl",
- *              ggSslContextFactory.initPipelineFactory(serverMode,
- *              false, executorService));</li>
- * </ul>
  */
 public class LocalExecSslClient extends Thread {
 
@@ -81,8 +58,12 @@ public class LocalExecSslClient extends Thread {
     static String command = "d:\\GG\\testexec.bat";
     static int port = 9999;
     static InetSocketAddress address;
-    static String keyStoreFilename = null;//"d:\\GG\\R66\\certs\\testsslclient.jks";
-    static String keyStorePasswd = "testsslclient";
+    // with client authentication
+    static String keyStoreFilename = "d:\\GG\\R66\\certs\\testclient2.jks";
+    // without client authentication
+    // static String keyStoreFilename = null;
+    static String keyStorePasswd = "testclient2";
+    static String keyPasswd = "client2";
     static String keyTrustStoreFilename = "d:\\GG\\R66\\certs\\testclient.jks";
     static String keyTrustStorePasswd = "testclient";
     static LocalExecResult result;
@@ -123,15 +104,17 @@ public class LocalExecSslClient extends Thread {
         // For empty KeyStore
         if (keyStoreFilename == null) {
             ggSecureKeyStore =
-                new GgSecureKeyStore(keyStorePasswd, null);
+                new GgSecureKeyStore(keyStorePasswd, keyPasswd);
         } else {
             ggSecureKeyStore =
-                new GgSecureKeyStore(keyStoreFilename, keyStorePasswd, null);
+                new GgSecureKeyStore(keyStoreFilename, keyStorePasswd, keyPasswd);
         }
 
         if (keyTrustStoreFilename != null) {
             // Load the client TrustStore
             ggSecureKeyStore.initTrustStore(keyTrustStoreFilename, keyTrustStorePasswd);
+        } else {
+            ggSecureKeyStore.initEmptyTrustStore(keyTrustStorePasswd);
         }
         GgSslContextFactory ggSslContextFactory = new GgSslContextFactory(ggSecureKeyStore, false);
         localExecClientPipelineFactory =
@@ -151,6 +134,7 @@ public class LocalExecSslClient extends Thread {
             System.err.println("Result: " + ok+":"+ko);
             ok = 0;
             ko = 0;
+
             // Now run multiple within one thread
             first = System.currentTimeMillis();
             for (int i = 0; i < nit; i ++) {

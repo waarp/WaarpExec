@@ -95,6 +95,8 @@ public class LocalExecSslServer {
         if (trustStoreFilename != null) {
             // Include certificates
             ggSecureKeyStore.initTrustStore(trustStoreFilename, trustStorePasswd);
+        } else {
+            ggSecureKeyStore.initEmptyTrustStore(trustStorePasswd);
         }
         GgSslContextFactory ggSslContextFactory =
             new GgSslContextFactory(ggSecureKeyStore, true);
