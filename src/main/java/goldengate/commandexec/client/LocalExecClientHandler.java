@@ -45,19 +45,43 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
     private static final GgInternalLogger logger = GgInternalLoggerFactory
             .getLogger(LocalExecClientHandler.class);
 
+
+    private LocalExecResult result;
     private StringBuilder back;
-
-    private LocalExecResult result = new LocalExecResult(LocalExecDefaultResult.NoStatus);
     private boolean firstMessage = true;
-
     private GgFuture future;
-
+    protected LocalExecClientPipelineFactory factory = null;
     /**
      * Constructor
      */
-    public LocalExecClientHandler() {
+    public LocalExecClientHandler(LocalExecClientPipelineFactory factory) {
+        this.factory = factory;
+    }
+
+    public void initExecClient() {
+        this.result = new LocalExecResult(LocalExecDefaultResult.NoStatus);
         this.back = new StringBuilder();
+        this.firstMessage = true;
         this.future = new GgFuture(true);
+    }
+
+    /* (non-Javadoc)
+     * @see org.jboss.netty.channel.SimpleChannelUpstreamHandler#channelConnected(org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.ChannelStateEvent)
+     */
+    @Override
+    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e)
+            throws Exception {
+        initExecClient();
+        factory.addChannel(ctx.getChannel());
+    }
+
+    /* (non-Javadoc)
+     * @see org.jboss.netty.channel.SimpleChannelUpstreamHandler#channelDisconnected(org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.ChannelStateEvent)
+     */
+    @Override
+    public void channelDisconnected(ChannelHandlerContext ctx,
+            ChannelStateEvent e) throws Exception {
+        this.factory.removeChannel(e.getChannel());
     }
 
     /**
@@ -73,6 +97,16 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e)
             throws Exception {
         logger.debug("ChannelClosed");
+        if (!future.isDone()) {
+            // Should not be
+            finalizeMessage();
+        }
+        super.channelClosed(ctx, e);
+    }
+    /**
+     * Finalize a message
+     */
+    private void finalizeMessage() {
         if (firstMessage) {
             logger.warn(result.status+" "+result.result);
             result.set(LocalExecDefaultResult.NoMessage);
@@ -88,9 +122,7 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
         } else {
             this.future.setSuccess();
         }
-        super.channelClosed(ctx, e);
     }
-
     /**
      * Waiting for the close of the exec
      * @return The LocalExecResult
@@ -105,21 +137,35 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
         // Add the line received from the server.
         String mesg = (String) e.getMessage();
-        logger.debug("Recv: "+mesg);
         // If first message, then take the status and then the message
         if (firstMessage) {
             firstMessage = false;
             int pos = mesg.indexOf(' ');
-            result.status = Integer.parseInt(mesg.substring(0, pos));
+            try {
+                result.status = Integer.parseInt(mesg.substring(0, pos));
+            } catch (NumberFormatException e1) {
+                // Error
+                result.set(LocalExecDefaultResult.BadTransmition);
+                back.append(mesg);
+                ctx.getChannel().close();
+                return;
+            }
             mesg = mesg.substring(pos+1);
             result.result = mesg;
+            back.append(mesg);
+        } else if (LocalExecDefaultResult.ENDOFCOMMAND.startsWith(mesg)) {
+            logger.debug("Receive End of Command");
+            this.finalizeMessage();
+        } else {
+            back.append('\n');
+            back.append(mesg);
         }
-        back.append(mesg);
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-        logger.error("Unexpected exception from downstream.", e.getCause());
+        logger.error("Unexpected exception from downstream while get information: "+firstMessage,
+                e.getCause());
         if (firstMessage) {
             firstMessage = false;
             result.set(LocalExecDefaultResult.BadTransmition);

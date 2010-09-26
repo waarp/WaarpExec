@@ -27,6 +27,9 @@ import goldengate.common.logging.GgInternalLoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.channels.CancelledKeyException;
+import java.nio.channels.ClosedChannelException;
+import java.util.concurrent.RejectedExecutionException;
 
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
@@ -34,9 +37,8 @@ import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.exec.PumpStreamHandler;
 
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
@@ -49,20 +51,42 @@ import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
     // Fixed delay, but could change if necessary at construction
     private long delay = LocalExecDefaultResult.MAXWAITPROCESS;
+    protected LocalExecServerPipelineFactory factory = null;
+
     /**
      * Internal Logger
      */
     private static final GgInternalLogger logger = GgInternalLoggerFactory
             .getLogger(LocalExecServerHandler.class);
 
+    protected boolean answered = false;
+
     /**
      * Constructor with a specific delay
      * @param newdelay
      */
-    public LocalExecServerHandler(long newdelay) {
+    public LocalExecServerHandler(LocalExecServerPipelineFactory factory, long newdelay) {
+        this.factory = factory;
         delay = newdelay;
     }
 
+    /* (non-Javadoc)
+     * @see org.jboss.netty.channel.SimpleChannelUpstreamHandler#channelConnected(org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.ChannelStateEvent)
+     */
+    @Override
+    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e)
+            throws Exception {
+        answered = false;
+        factory.addChannel(ctx.getChannel());
+    }
+    /* (non-Javadoc)
+     * @see org.jboss.netty.channel.SimpleChannelUpstreamHandler#channelDisconnected(org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.ChannelStateEvent)
+     */
+    @Override
+    public void channelDisconnected(ChannelHandlerContext ctx,
+            ChannelStateEvent e) throws Exception {
+        this.factory.removeChannel(e.getChannel());
+    }
     /**
      * Change the delay to the specific value. Need to be called before any receive message.
      * @param newdelay
@@ -73,6 +97,7 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
 
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent evt) {
+        answered = false;
         // Cast to a String first.
         // We know it is a String because we put some codec in
         // LocalExecPipelineFactory.
@@ -200,21 +225,42 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
             // We do not need to write a ChannelBuffer here.
             // We know the encoder inserted at LocalExecPipelineFactory will do the
             // conversion.
-            ChannelFuture future = evt.getChannel().write(response);
+            evt.getChannel().write(response);
+            answered = true;
             if (watchdog != null) {
                 watchdog.stop();
             }
-            // Close connection after each execution
-            future.addListener(ChannelFutureListener.CLOSE);
+            logger.debug("End of Command");
+            evt.getChannel().write(LocalExecDefaultResult.ENDOFCOMMAND);
         }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-        logger.error("Unexpected exception from downstream.", e
+        if (answered) {
+            logger.debug("Exception while answered: ",e.getCause());
+        } else {
+            logger.error("Unexpected exception from downstream while not answered.", e
                 .getCause());
-        // Nothing to do since execution will stop later on and an error will occur on client side
+        }
+        Throwable e1 = e.getCause();
+        // Look if Nothing to do since execution will stop later on and
+        // an error will occur on client side
         // since no message arrived before close (or partially)
-        e.getChannel().close();
+        if (e1 instanceof CancelledKeyException) {
+        } else if (e1 instanceof ClosedChannelException) {
+        } else if (e1 instanceof NullPointerException) {
+            if (e.getChannel().isConnected()) {
+                e.getChannel().close();
+            }
+        } else if (e1 instanceof IOException) {
+            if (e.getChannel().isConnected()) {
+                e.getChannel().close();
+            }
+        } else if (e1 instanceof RejectedExecutionException) {
+            if (e.getChannel().isConnected()) {
+                e.getChannel().close();
+            }
+        }
     }
 }

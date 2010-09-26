@@ -33,8 +33,9 @@ public class LocalExecDefaultResult {
     public static LocalExecResult BadExecution = new LocalExecResult(false, -5, null, "Bad Execution\n");
     public static LocalExecResult TimeOutExecution = new LocalExecResult(false, -6, null, "TimeOut Execution\n");
     public static LocalExecResult InternalError = new LocalExecResult(false, -7, null, "Internal Error\n");
-    public static LocalExecResult NoStatus = new LocalExecResult(false, 0, null, "No Status\n");
+    public static LocalExecResult NoStatus = new LocalExecResult(false, -8, null, "No Status\n");
     public static LocalExecResult CorrectExec = new LocalExecResult(false, 1, null, "Correctly Executed\n");
     public static long RETRYINMS = 500;
     public static long MAXWAITPROCESS = 60000;
+    public static String ENDOFCOMMAND = "$#GGEXEC END OF COMMAND#$\n";
 }

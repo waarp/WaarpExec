@@ -20,9 +20,12 @@
  */
 package goldengate.commandexec.client;
 
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.Channels;
+import org.jboss.netty.channel.group.ChannelGroup;
+import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 import org.jboss.netty.handler.codec.frame.Delimiters;
 import org.jboss.netty.handler.codec.string.StringDecoder;
@@ -36,6 +39,12 @@ import org.jboss.netty.handler.codec.string.StringEncoder;
  */
 public class LocalExecClientPipelineFactory implements ChannelPipelineFactory {
 
+    private ChannelGroup channelGroup;
+
+    public LocalExecClientPipelineFactory() {
+        channelGroup = new DefaultChannelGroup("LocalExecClient");
+    }
+
     public ChannelPipeline getPipeline() throws Exception {
         // Create a default pipeline implementation.
         ChannelPipeline pipeline = Channels.pipeline();
@@ -47,9 +56,29 @@ public class LocalExecClientPipelineFactory implements ChannelPipelineFactory {
         pipeline.addLast("encoder", new StringEncoder());
 
         // and then business logic.
-        LocalExecClientHandler localExecClientHandler = new LocalExecClientHandler();
+        LocalExecClientHandler localExecClientHandler = new LocalExecClientHandler(this);
         pipeline.addLast("handler", localExecClientHandler);
 
         return pipeline;
+    }
+    /**
+     * Add a channel to the ExecClient Group
+     * @param channel
+     */
+    public void addChannel(Channel channel) {
+        channelGroup.add(channel);
+    }
+    /**
+     * remove a channel to the ExecClient Group
+     * @param channel
+     */
+    public void removeChannel(Channel channel) {
+        channelGroup.remove(channel);
+    }
+    /**
+     * Release internal resources
+     */
+    public void releaseResources() {
+        channelGroup.close();
     }
 }

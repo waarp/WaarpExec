@@ -18,13 +18,12 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package goldengate.commandexec.testssl;
+package goldengate.commandexec.ssl.client;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 import org.jboss.netty.handler.codec.frame.Delimiters;
@@ -32,6 +31,7 @@ import org.jboss.netty.handler.codec.string.StringDecoder;
 import org.jboss.netty.handler.codec.string.StringEncoder;
 
 import goldengate.commandexec.client.LocalExecClientHandler;
+import goldengate.commandexec.client.LocalExecClientPipelineFactory;
 import goldengate.common.crypto.ssl.GgSslContextFactory;
 
 /**
@@ -41,7 +41,7 @@ import goldengate.common.crypto.ssl.GgSslContextFactory;
  * @author Frederic Bregier
  *
  */
-public class LocalExecSslClientPipelineFactory implements ChannelPipelineFactory {
+public class LocalExecSslClientPipelineFactory extends LocalExecClientPipelineFactory {
 
     private GgSslContextFactory ggSslContextFactory;
     private ExecutorService executor = Executors.newCachedThreadPool();
@@ -65,10 +65,17 @@ public class LocalExecSslClientPipelineFactory implements ChannelPipelineFactory
         pipeline.addLast("encoder", new StringEncoder());
 
         // and then business logic.
-        LocalExecClientHandler localExecClientHandler = new LocalExecClientHandler();
+        LocalExecClientHandler localExecClientHandler = new LocalExecClientHandler(this);
         pipeline.addLast("handler", localExecClientHandler);
 
         return pipeline;
+    }
+    /**
+     * Release internal resources
+     */
+    public void releaseResources() {
+        super.releaseResources();
+        this.executor.shutdownNow();
     }
 
 }

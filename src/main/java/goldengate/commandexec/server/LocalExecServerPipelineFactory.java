@@ -23,8 +23,11 @@ package goldengate.commandexec.server;
 import static org.jboss.netty.channel.Channels.*;
 import goldengate.commandexec.utils.LocalExecDefaultResult;
 
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
+import org.jboss.netty.channel.group.ChannelGroup;
+import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 import org.jboss.netty.handler.codec.frame.Delimiters;
 import org.jboss.netty.handler.codec.string.StringDecoder;
@@ -38,6 +41,7 @@ import org.jboss.netty.handler.codec.string.StringEncoder;
 public class LocalExecServerPipelineFactory implements ChannelPipelineFactory {
 
     private long delay = LocalExecDefaultResult.MAXWAITPROCESS;
+    private ChannelGroup channelGroup = new DefaultChannelGroup("LocalExecServer");
 
     /**
      * Constructor with default delay
@@ -68,8 +72,28 @@ public class LocalExecServerPipelineFactory implements ChannelPipelineFactory {
 
         // and then business logic.
         // Could change it with a new fixed delay if necessary at construction
-        pipeline.addLast("handler", new LocalExecServerHandler(delay));
+        pipeline.addLast("handler", new LocalExecServerHandler(this, delay));
 
         return pipeline;
+    }
+    /**
+     * Add a channel to the ExecClient Group
+     * @param channel
+     */
+    public void addChannel(Channel channel) {
+        channelGroup.add(channel);
+    }
+    /**
+     * remove a channel to the ExecClient Group
+     * @param channel
+     */
+    public void removeChannel(Channel channel) {
+        channelGroup.remove(channel);
+    }
+    /**
+     * Release internal resources
+     */
+    public void releaseResources() {
+        channelGroup.close();
     }
 }
