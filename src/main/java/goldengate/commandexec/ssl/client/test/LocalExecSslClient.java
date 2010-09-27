@@ -112,7 +112,7 @@ public class LocalExecSslClient extends Thread {
 
         if (keyTrustStoreFilename != null) {
             // Load the client TrustStore
-            ggSecureKeyStore.initTrustStore(keyTrustStoreFilename, keyTrustStorePasswd);
+            ggSecureKeyStore.initTrustStore(keyTrustStoreFilename, keyTrustStorePasswd, false);
         } else {
             ggSecureKeyStore.initEmptyTrustStore(keyTrustStorePasswd);
         }
