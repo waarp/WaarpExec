@@ -136,6 +136,20 @@ public class LocalExecClient extends Thread {
             // print time for one exec
             System.err.println((nit*nth)+"=Total time in ms: "+(second-first)+" or "+(nit*nth*1000/(second-first))+" exec/s");
             System.err.println("Result: " + ok+":"+ko);
+            ok = 0;
+            ko = 0;
+
+            // run once
+            first = System.currentTimeMillis();
+            client.connect();
+            client.runFinal();
+            client.disconnect();
+            second = System.currentTimeMillis();
+            // print time for one exec
+            System.err.println("1=Total time in ms: "+(second-first)+" or "+(1*1000/(second-first))+" exec/s");
+            System.err.println("Result: " + ok+":"+ko);
+            ok = 0;
+            ko = 0;
         } finally {
             // Shut down all thread pools to exit.
             bootstrap.releaseExternalResources();
@@ -197,6 +211,38 @@ public class LocalExecClient extends Thread {
 
         ChannelFuture lastWriteFuture = null;
         String line = command+"\n";
+        if (line != null) {
+            // Sends the received line to the server.
+            lastWriteFuture = channel.write(line);
+            // Wait until all messages are flushed before closing the channel.
+            if (lastWriteFuture != null) {
+                lastWriteFuture.awaitUninterruptibly();
+            }
+            // Wait for the end of the exec command
+            LocalExecResult localExecResult = clientHandler.waitFor();
+            int status = localExecResult.status;
+            if (status < 0) {
+                System.err.println("Status: " + status + "\nResult: " +
+                        localExecResult.result);
+                ko++;
+            } else {
+                ok++;
+                result = localExecResult;
+            }
+        }
+    }
+    /**
+     * Run method for closing Server
+     */
+    private void runFinal() {
+        // Initialize the command context
+        LocalExecClientHandler clientHandler =
+            (LocalExecClientHandler) channel.getPipeline().getLast();
+        clientHandler.initExecClient();
+        // Command to execute
+
+        ChannelFuture lastWriteFuture = null;
+        String line = "-1000 stop\n";
         if (line != null) {
             // Sends the received line to the server.
             lastWriteFuture = channel.write(line);

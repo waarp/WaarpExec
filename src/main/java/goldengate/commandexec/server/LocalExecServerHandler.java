@@ -74,7 +74,7 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
      */
     public static boolean isShutdown(Channel channel) {
         if (isShutdown) {
-            channel.write(LocalExecDefaultResult.NoCommand);
+            channel.write(LocalExecDefaultResult.ConnectionRefused.result);
             channel.write(LocalExecDefaultResult.ENDOFCOMMAND).awaitUninterruptibly();
             Channels.close(channel);
             return true;
@@ -195,6 +195,7 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
         String response;
         response = LocalExecDefaultResult.NoStatus.status+" "+
             LocalExecDefaultResult.NoStatus.result;
+        boolean isLocallyShutdown = false;
         ExecuteWatchdog watchdog = null;
         try {
             if (request.length() == 0) {
@@ -214,7 +215,8 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                 if (tempDelay < 0) {
                     // Shutdown Order
                     isShutdown = true;
-                    isShutdown(evt.getChannel());
+                    logger.warn("Shutdown order received");
+                    isLocallyShutdown = isShutdown(evt.getChannel());
                     // Wait the specified time
                     try {
                         Thread.sleep(-tempDelay);
@@ -331,6 +333,9 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                 }
             }
         } finally {
+            if (isLocallyShutdown) {
+                return;
+            }
             // We do not need to write a ChannelBuffer here.
             // We know the encoder inserted at LocalExecPipelineFactory will do the
             // conversion.
@@ -339,7 +344,7 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
             if (watchdog != null) {
                 watchdog.stop();
             }
-            logger.debug("End of Command");
+            logger.warn("End of Command: "+request+"\n"+response);
             evt.getChannel().write(LocalExecDefaultResult.ENDOFCOMMAND);
         }
     }
