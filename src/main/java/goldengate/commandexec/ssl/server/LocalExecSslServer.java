@@ -64,7 +64,8 @@ public class LocalExecSslServer {
         long delay = LocalExecDefaultResult.MAXWAITPROCESS;
         String keyStoreFilename, keyStorePasswd, keyPassword;
         String trustStoreFilename = null, trustStorePasswd = null;
-        addr = InetAddress.getLocalHost();
+        byte []loop = {127,0,0,1};
+        addr = InetAddress.getByAddress(loop);
         if (args.length >=3) {
             keyStoreFilename = args[0];
             keyStorePasswd = args[1];

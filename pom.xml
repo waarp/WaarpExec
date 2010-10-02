@@ -4,7 +4,7 @@
   <groupId>GoldenGate</groupId>
   <artifactId>GoldenGateExec</artifactId>
   <packaging>jar</packaging>
-  <version>0.1.0</version>
+  <version>1.0.0</version>
   <name>GoldenGateExec</name>
   <description>The GoldenGate Exec project is about a Daemon for local execution of system commands
   (as System.exec) but through client/server model and not within the same JVM.</description>

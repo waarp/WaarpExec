@@ -66,7 +66,8 @@ public class LocalExecServer {
                 delay = Long.parseLong(args[2]);
             }
         } else {
-            addr = InetAddress.getLocalHost();
+            byte []loop = {127,0,0,1};
+            addr = InetAddress.getByAddress(loop);
         }
         threadPool = Executors.newCachedThreadPool();
         threadPool2 = Executors.newCachedThreadPool();

@@ -64,6 +64,10 @@ public class LocalExecSslServerHandler extends LocalExecServerHandler {
                     throws Exception {
                 logger.debug("Handshake: "+future.isSuccess(),future.getCause());
                 if (future.isSuccess()) {
+                    if (isShutdown(future.getChannel())) {
+                        answered = true;
+                        return;
+                    }
                     answered = false;
                     factory.addChannel(future.getChannel());
                 } else {

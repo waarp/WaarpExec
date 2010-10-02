@@ -75,8 +75,9 @@ public class LocalExecClient extends Thread {
         InternalLoggerFactory.setDefaultFactory(new GgSlf4JLoggerFactory(
                 Level.WARN));
         InetAddress addr;
+        byte []loop = {127,0,0,1};
         try {
-            addr = InetAddress.getLocalHost();
+            addr = InetAddress.getByAddress(loop);
         } catch (UnknownHostException e) {
             return;
         }

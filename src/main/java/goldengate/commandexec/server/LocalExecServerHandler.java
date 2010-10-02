@@ -29,6 +29,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.channels.CancelledKeyException;
 import java.nio.channels.ClosedChannelException;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.RejectedExecutionException;
 
 import org.apache.commons.exec.CommandLine;
@@ -37,8 +40,10 @@ import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.exec.PumpStreamHandler;
 
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
+import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
@@ -52,6 +57,7 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
     // Fixed delay, but could change if necessary at construction
     private long delay = LocalExecDefaultResult.MAXWAITPROCESS;
     protected LocalExecServerPipelineFactory factory = null;
+    static protected boolean isShutdown = false;
 
     /**
      * Internal Logger
@@ -61,6 +67,84 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
 
     protected boolean answered = false;
 
+    /**
+     * Is the Local Exec Server going Shutdown
+     * @param channel associated channel
+     * @return True if in Shutdown
+     */
+    public static boolean isShutdown(Channel channel) {
+        if (isShutdown) {
+            channel.write(LocalExecDefaultResult.NoCommand);
+            channel.write(LocalExecDefaultResult.ENDOFCOMMAND).awaitUninterruptibly();
+            Channels.close(channel);
+            return true;
+        }
+        return false;
+    }
+    /**
+     * Print stack trace
+     * @param thread
+     * @param stacks
+     */
+    static private void printStackTrace(Thread thread, StackTraceElement[] stacks) {
+        System.err.print(thread.toString() + " : ");
+        for (int i = 0; i < stacks.length-1; i++) {
+            System.err.print(stacks[i].toString()+" ");
+        }
+        System.err.println(stacks[stacks.length-1].toString());
+    }
+    /**
+     * Shutdown thread
+     * @author Frederic Bregier
+     *
+     */
+    private static class GGLEThreadShutdown extends Thread {
+        long delay = 3000;
+        LocalExecServerPipelineFactory factory;
+        public GGLEThreadShutdown(LocalExecServerPipelineFactory factory) {
+            this.factory = factory;
+        }
+        /* (non-Javadoc)
+         * @see java.lang.Thread#run()
+         */
+        @Override
+        public void run() {
+            Timer timer = null;
+            timer = new Timer(true);
+            GGLETimerTask ggleTimerTask = new GGLETimerTask();
+            timer.schedule(ggleTimerTask, delay);
+            factory.releaseResources();
+            System.exit(0);
+        }
+
+    }
+    /**
+     * TimerTask to terminate the server
+     * @author Frederic Bregier
+     *
+     */
+    private static class GGLETimerTask extends TimerTask {
+        /**
+         * Internal Logger
+         */
+        private static final GgInternalLogger logger = GgInternalLoggerFactory
+                .getLogger(GGLETimerTask.class);
+        /*
+         * (non-Javadoc)
+         *
+         * @see java.util.TimerTask#run()
+         */
+        @Override
+        public void run() {
+            logger.error("System will force EXIT");
+            Map<Thread, StackTraceElement[]> map = Thread
+                    .getAllStackTraces();
+            for (Thread thread: map.keySet()) {
+                printStackTrace(thread, map.get(thread));
+            }
+            System.exit(0);
+        }
+    }
     /**
      * Constructor with a specific delay
      * @param newdelay
@@ -76,6 +160,10 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e)
             throws Exception {
+        if (isShutdown(ctx.getChannel())) {
+            answered = true;
+            return;
+        }
         answered = false;
         factory.addChannel(ctx.getChannel());
     }
@@ -115,7 +203,28 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                     LocalExecDefaultResult.NoCommand.result;
             } else {
                 String[] args = request.split(" ");
-                File exec = new File(args[0]);
+                int cpt = 0;
+                long tempDelay;
+                try {
+                    tempDelay = Long.parseLong(args[0]);
+                    cpt++;
+                } catch (NumberFormatException e) {
+                    tempDelay = delay;
+                }
+                if (tempDelay < 0) {
+                    // Shutdown Order
+                    isShutdown = true;
+                    isShutdown(evt.getChannel());
+                    // Wait the specified time
+                    try {
+                        Thread.sleep(-tempDelay);
+                    } catch (InterruptedException e) {
+                    }
+                    Thread thread = new GGLEThreadShutdown(factory);
+                    thread.start();
+                    return;
+                }
+                File exec = new File(args[cpt++]);
                 if (exec.isAbsolute()) {
                     // If true file, is it executable
                     if (! exec.canExecute()) {
@@ -127,8 +236,8 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                 }
                 // Create command with parameters
                 CommandLine commandLine = new CommandLine(args[0]);
-                for (int i = 1; i < args.length; i ++) {
-                    commandLine.addArgument(args[i]);
+                for (; cpt < args.length; cpt ++) {
+                    commandLine.addArgument(args[cpt]);
                 }
                 DefaultExecutor defaultExecutor = new DefaultExecutor();
                 ByteArrayOutputStream outputStream;
@@ -137,9 +246,9 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                 defaultExecutor.setStreamHandler(pumpStreamHandler);
                 int[] correctValues = { 0, 1 };
                 defaultExecutor.setExitValues(correctValues);
-                if (delay > 0) {
+                if (tempDelay > 0) {
                     // If delay (max time), then setup Watchdog
-                    watchdog = new ExecuteWatchdog(delay);
+                    watchdog = new ExecuteWatchdog(tempDelay);
                     defaultExecutor.setWatchdog(watchdog);
                 }
                 int status = -1;

@@ -34,6 +34,7 @@ public class LocalExecDefaultResult {
     public static LocalExecResult TimeOutExecution = new LocalExecResult(false, -6, null, "TimeOut Execution\n");
     public static LocalExecResult InternalError = new LocalExecResult(false, -7, null, "Internal Error\n");
     public static LocalExecResult NoStatus = new LocalExecResult(false, -8, null, "No Status\n");
+    public static LocalExecResult ConnectionRefused = new LocalExecResult(false, -9, null, "Exec Server refused the connection\n");
     public static LocalExecResult CorrectExec = new LocalExecResult(false, 1, null, "Correctly Executed\n");
     public static long RETRYINMS = 500;
     public static long MAXWAITPROCESS = 60000;
