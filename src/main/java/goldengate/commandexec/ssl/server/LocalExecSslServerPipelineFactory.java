@@ -74,7 +74,7 @@ public class LocalExecSslServerPipelineFactory extends LocalExecServerPipelineFa
         // Add SSL as first element in the pipeline
         pipeline.addLast("ssl",
                 ggSslContextFactory.initPipelineFactory(true,
-                        ggSslContextFactory.needClientAuthentication(), executor));
+                        ggSslContextFactory.needClientAuthentication(), false, executor));
         // Add the text line codec combination first,
         pipeline.addLast("framer", new DelimiterBasedFrameDecoder(8192,
                 Delimiters.lineDelimiter()));
