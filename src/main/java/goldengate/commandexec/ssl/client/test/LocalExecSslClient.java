@@ -115,7 +115,7 @@ public class LocalExecSslClient extends Thread {
             // Load the client TrustStore
             ggSecureKeyStore.initTrustStore(keyTrustStoreFilename, keyTrustStorePasswd, false);
         } else {
-            ggSecureKeyStore.initEmptyTrustStore(keyTrustStorePasswd);
+            ggSecureKeyStore.initEmptyTrustStore();
         }
         GgSslContextFactory ggSslContextFactory = new GgSslContextFactory(ggSecureKeyStore, false);
         localExecClientPipelineFactory =
