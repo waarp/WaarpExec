@@ -58,6 +58,9 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
         this.factory = factory;
     }
 
+    /**
+     * Initialize the client status for a new execution
+     */
     public void initExecClient() {
         this.result = new LocalExecResult(LocalExecDefaultResult.NoStatus);
         this.back = new StringBuilder();
