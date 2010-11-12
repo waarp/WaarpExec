@@ -325,7 +325,7 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                     } catch (IOException e2) {
                     }
                 } else {
-                    response = status+" "+outputStream.toString()+"\n";
+                    response = status+" "+outputStream.toString();
                     try {
                         outputStream.close();
                     } catch (IOException e2) {
@@ -339,12 +339,12 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
             // We do not need to write a ChannelBuffer here.
             // We know the encoder inserted at LocalExecPipelineFactory will do the
             // conversion.
-            evt.getChannel().write(response);
+            evt.getChannel().write(response+"\n");
             answered = true;
             if (watchdog != null) {
                 watchdog.stop();
             }
-            logger.warn("End of Command: "+request+"\n"+response);
+            logger.warn("End of Command: "+request+" : "+response);
             evt.getChannel().write(LocalExecDefaultResult.ENDOFCOMMAND);
         }
     }
