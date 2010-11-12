@@ -32,7 +32,7 @@ import org.jboss.netty.handler.codec.string.StringDecoder;
 import org.jboss.netty.handler.codec.string.StringEncoder;
 
 /**
- * Creates a newly configured {@link ChannelPipeline} for a new channel for LocalExecClient.
+ * Creates a newly configured {@link ChannelPipeline} for a new channel for LocalExecClientTest.
  *
  *
  *

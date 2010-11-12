@@ -48,7 +48,7 @@ public class LocalExecSslServer {
     /**
      * Takes 3 to 6 arguments (last 3 are optional arguments):<br>
      * - mandatory arguments: filename keystorepaswwd keypassword<br>
-     * - if no more arguments are provided, it implies localhost + 9999 port and no certificates<br>
+     * - if no more arguments are provided, it implies 127.0.0.1 + 9999 port and no certificates<br>
      * - optional arguments:<br>
      *  "trustfilename" "trustpassword"<br>
      *  "trustfilename" "trustpassword" "addresse" "port"<br>

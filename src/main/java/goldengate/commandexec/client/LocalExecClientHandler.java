@@ -130,8 +130,12 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
      * Waiting for the close of the exec
      * @return The LocalExecResult
      */
-    public LocalExecResult waitFor() {
-        this.future.awaitUninterruptibly();
+    public LocalExecResult waitFor(long delay) {
+        if (delay <= 0) {
+            this.future.awaitUninterruptibly();
+        } else {
+            this.future.awaitUninterruptibly(delay);
+        }
         result.isSuccess = this.future.isSuccess();
         return result;
     }

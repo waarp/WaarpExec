@@ -250,7 +250,7 @@ public class LocalExecSslClient extends Thread {
                 lastWriteFuture.awaitUninterruptibly();
             }
             // Wait for the end of the exec command
-            LocalExecResult localExecResult = clientHandler.waitFor();
+            LocalExecResult localExecResult = clientHandler.waitFor(10000);
             int status = localExecResult.status;
             if (status < 0) {
                 System.err.println("Status: " + status + "\nResult: " +
@@ -282,7 +282,7 @@ public class LocalExecSslClient extends Thread {
                 lastWriteFuture.awaitUninterruptibly();
             }
             // Wait for the end of the exec command
-            LocalExecResult localExecResult = clientHandler.waitFor();
+            LocalExecResult localExecResult = clientHandler.waitFor(10000);
             int status = localExecResult.status;
             if (status < 0) {
                 System.err.println("Status: " + status + "\nResult: " +

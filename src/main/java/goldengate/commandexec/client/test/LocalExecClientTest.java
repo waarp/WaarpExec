@@ -47,10 +47,10 @@ import ch.qos.logback.classic.Level;
  *
  * On a bi-core Centrino2 vPro: 18/s in 50 sequential, 30/s in 10 threads with 50 sequential
  */
-public class LocalExecClient extends Thread {
+public class LocalExecClientTest extends Thread {
 
-    static int nit = 50;
-    static int nth = 10;
+    static int nit = 1;
+    static int nth = 1;
     static String command = "d:\\GG\\testexec.bat";
     static int port = 9999;
     static InetSocketAddress address;
@@ -93,7 +93,7 @@ public class LocalExecClient extends Thread {
         bootstrap.setPipelineFactory(localExecClientPipelineFactory);
         try {
             // Parse options.
-            LocalExecClient client = new LocalExecClient();
+            LocalExecClientTest client = new LocalExecClientTest();
             // run once
             long first = System.currentTimeMillis();
             client.connect();
@@ -124,7 +124,7 @@ public class LocalExecClient extends Thread {
             first = System.currentTimeMillis();
             // Starts all thread with a default number of execution
             for (int i = 0; i < nth; i ++) {
-                executorService.submit(new LocalExecClient());
+                executorService.submit(new LocalExecClientTest());
             }
             Thread.sleep(500);
             executorService.shutdown();
@@ -160,7 +160,7 @@ public class LocalExecClient extends Thread {
     /**
      * Simple constructor
      */
-    public LocalExecClient() {
+    public LocalExecClientTest() {
     }
 
     private Channel channel;
@@ -219,7 +219,7 @@ public class LocalExecClient extends Thread {
                 lastWriteFuture.awaitUninterruptibly();
             }
             // Wait for the end of the exec command
-            LocalExecResult localExecResult = clientHandler.waitFor();
+            LocalExecResult localExecResult = clientHandler.waitFor(10000);
             int status = localExecResult.status;
             if (status < 0) {
                 System.err.println("Status: " + status + "\nResult: " +
@@ -251,7 +251,7 @@ public class LocalExecClient extends Thread {
                 lastWriteFuture.awaitUninterruptibly();
             }
             // Wait for the end of the exec command
-            LocalExecResult localExecResult = clientHandler.waitFor();
+            LocalExecResult localExecResult = clientHandler.waitFor(10000);
             int status = localExecResult.status;
             if (status < 0) {
                 System.err.println("Status: " + status + "\nResult: " +

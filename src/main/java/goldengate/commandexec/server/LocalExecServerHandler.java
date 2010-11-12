@@ -190,7 +190,7 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
         // We know it is a String because we put some codec in
         // LocalExecPipelineFactory.
         String request = (String) evt.getMessage();
-
+        
         // Generate and write a response.
         String response;
         response = LocalExecDefaultResult.NoStatus.status+" "+
@@ -226,7 +226,8 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                     thread.start();
                     return;
                 }
-                File exec = new File(args[cpt++]);
+                String binary = args[cpt++];
+                File exec = new File(binary);
                 if (exec.isAbsolute()) {
                     // If true file, is it executable
                     if (! exec.canExecute()) {
@@ -237,7 +238,7 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                     }
                 }
                 // Create command with parameters
-                CommandLine commandLine = new CommandLine(args[0]);
+                CommandLine commandLine = new CommandLine(binary);
                 for (; cpt < args.length; cpt ++) {
                     commandLine.addArgument(args[cpt]);
                 }

@@ -46,7 +46,7 @@ public class LocalExecServer {
 
     /**
      * Takes 3 optional arguments:<br>
-     * - no argument: implies localhost + 9999 port<br>
+     * - no argument: implies 127.0.0.1 + 9999 port<br>
      * - arguments:<br>
      *  "addresse" "port"<br>
      *  "addresse" "port" "default delay"<br>
