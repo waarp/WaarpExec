@@ -345,7 +345,7 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
             if (watchdog != null) {
                 watchdog.stop();
             }
-            logger.warn("End of Command: "+request+" : "+response);
+            logger.info("End of Command: "+request+" : "+response);
             evt.getChannel().write(LocalExecDefaultResult.ENDOFCOMMAND);
         }
     }
