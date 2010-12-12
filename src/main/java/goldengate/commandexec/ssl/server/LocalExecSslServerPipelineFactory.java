@@ -51,7 +51,7 @@ public class LocalExecSslServerPipelineFactory extends LocalExecServerPipelineFa
 
     /**
      * Constructor with default delay
-     * @param newdelay
+     * @param ggSslContextFactory
      */
     public LocalExecSslServerPipelineFactory(GgSslContextFactory ggSslContextFactory) {
         // Default delay
@@ -60,6 +60,7 @@ public class LocalExecSslServerPipelineFactory extends LocalExecServerPipelineFa
 
     /**
      * Constructor with a specific default delay
+     * @param ggSslContextFactory
      * @param newdelay
      */
     public LocalExecSslServerPipelineFactory(GgSslContextFactory ggSslContextFactory, long newdelay) {
