@@ -44,8 +44,8 @@ import goldengate.common.crypto.ssl.GgSslContextFactory;
  */
 public class LocalExecSslServerPipelineFactory extends LocalExecServerPipelineFactory {
 
-    private GgSslContextFactory ggSslContextFactory;
-    private ExecutorService executor = Executors.newCachedThreadPool();
+    private final GgSslContextFactory ggSslContextFactory;
+    private final ExecutorService executor = Executors.newCachedThreadPool();
 
     private long delay = LocalExecDefaultResult.MAXWAITPROCESS;
 

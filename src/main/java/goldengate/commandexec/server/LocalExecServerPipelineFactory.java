@@ -41,7 +41,7 @@ import org.jboss.netty.handler.codec.string.StringEncoder;
 public class LocalExecServerPipelineFactory implements ChannelPipelineFactory {
 
     private long delay = LocalExecDefaultResult.MAXWAITPROCESS;
-    private ChannelGroup channelGroup = new DefaultChannelGroup("LocalExecServer");
+    private final ChannelGroup channelGroup = new DefaultChannelGroup("LocalExecServer");
 
     /**
      * Constructor with default delay

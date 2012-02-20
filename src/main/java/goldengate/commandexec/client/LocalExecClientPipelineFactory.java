@@ -39,7 +39,7 @@ import org.jboss.netty.handler.codec.string.StringEncoder;
  */
 public class LocalExecClientPipelineFactory implements ChannelPipelineFactory {
 
-    private ChannelGroup channelGroup;
+    private final ChannelGroup channelGroup;
 
     public LocalExecClientPipelineFactory() {
         channelGroup = new DefaultChannelGroup("LocalExecClient");

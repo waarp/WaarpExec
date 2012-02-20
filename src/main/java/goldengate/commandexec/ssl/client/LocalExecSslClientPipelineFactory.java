@@ -43,8 +43,8 @@ import goldengate.common.crypto.ssl.GgSslContextFactory;
  */
 public class LocalExecSslClientPipelineFactory extends LocalExecClientPipelineFactory {
 
-    private GgSslContextFactory ggSslContextFactory;
-    private ExecutorService executor = Executors.newCachedThreadPool();
+    private final GgSslContextFactory ggSslContextFactory;
+    private final ExecutorService executor = Executors.newCachedThreadPool();
 
     public LocalExecSslClientPipelineFactory(GgSslContextFactory ggSslContextFactory) {
         this.ggSslContextFactory = ggSslContextFactory;
