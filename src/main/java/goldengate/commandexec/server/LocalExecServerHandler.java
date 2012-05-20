@@ -219,7 +219,7 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                     isLocallyShutdown = isShutdown(evt.getChannel());
                     // Wait the specified time
                     try {
-                        Thread.sleep(-tempDelay);
+                        Thread.sleep((-tempDelay/10)*10);
                     } catch (InterruptedException e) {
                     }
                     Thread thread = new GGLEThreadShutdown(factory);

@@ -4,7 +4,7 @@
   <groupId>GoldenGate</groupId>
   <artifactId>GoldenGateExec</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.5</version>
+  <version>1.0.6</version>
   <name>GoldenGateExec</name>
   <description>The GoldenGate Exec project is about a Daemon for local execution of system commands
   (as System.exec) but through client/server model and not within the same JVM.</description>
@@ -43,7 +43,7 @@
   	<dependency>
   		<groupId>GoldenGate</groupId>
   		<artifactId>GoldenGateCommon</artifactId>
-  		<version>1.1.9</version>
+  		<version>1.1.11</version>
   		<exclusions>
   			<exclusion>
   				<artifactId>xom</artifactId>
@@ -71,19 +71,19 @@
   	<dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-access</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.3</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.3</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-core</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.3</version>
       <optional>true</optional>
     </dependency>
   </dependencies>
