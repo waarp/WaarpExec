@@ -75,7 +75,10 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
     public static boolean isShutdown(Channel channel) {
         if (isShutdown) {
             channel.write(LocalExecDefaultResult.ConnectionRefused.result);
-            channel.write(LocalExecDefaultResult.ENDOFCOMMAND).awaitUninterruptibly();
+            try {
+                channel.write(LocalExecDefaultResult.ENDOFCOMMAND).await();
+            } catch (InterruptedException e) {
+            }
             Channels.close(channel);
             return true;
         }

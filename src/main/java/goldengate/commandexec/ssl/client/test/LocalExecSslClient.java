@@ -215,7 +215,10 @@ public class LocalExecSslClient extends Thread {
         ChannelFuture future = bootstrap.connect(address);
 
         // Wait until the connection attempt succeeds or fails.
-        channel = future.awaitUninterruptibly().getChannel();
+        try {
+            channel = future.await().getChannel();
+        } catch (InterruptedException e) {
+        }
         if (!future.isSuccess()) {
             System.err.println("Client Not Connected");
             future.getCause().printStackTrace();
@@ -228,7 +231,10 @@ public class LocalExecSslClient extends Thread {
     private void disconnect() {
      // Close the connection. Make sure the close operation ends because
         // all I/O operations are asynchronous in Netty.
-        channel.close().awaitUninterruptibly();
+        try {
+            channel.close().await();
+        } catch (InterruptedException e) {
+        }
     }
     /**
      * Run method both for not threaded execution and threaded execution
@@ -247,7 +253,10 @@ public class LocalExecSslClient extends Thread {
             lastWriteFuture = channel.write(line);
             // Wait until all messages are flushed before closing the channel.
             if (lastWriteFuture != null) {
-                lastWriteFuture.awaitUninterruptibly();
+                try {
+                    lastWriteFuture.await();
+                } catch (InterruptedException e) {
+                }
             }
             // Wait for the end of the exec command
             LocalExecResult localExecResult = clientHandler.waitFor(10000);
@@ -279,7 +288,10 @@ public class LocalExecSslClient extends Thread {
             lastWriteFuture = channel.write(line);
             // Wait until all messages are flushed before closing the channel.
             if (lastWriteFuture != null) {
-                lastWriteFuture.awaitUninterruptibly();
+                try {
+                    lastWriteFuture.await();
+                } catch (InterruptedException e) {
+                }
             }
             // Wait for the end of the exec command
             LocalExecResult localExecResult = clientHandler.waitFor(10000);
