@@ -36,7 +36,7 @@ import org.jboss.netty.logging.InternalLoggerFactory;
 import org.waarp.commandexec.client.LocalExecClientHandler;
 import org.waarp.commandexec.client.LocalExecClientPipelineFactory;
 import org.waarp.commandexec.utils.LocalExecResult;
-import org.waarp.common.logging.GgSlf4JLoggerFactory;
+import org.waarp.common.logging.WaarpSlf4JLoggerFactory;
 
 import ch.qos.logback.classic.Level;
 
@@ -72,7 +72,7 @@ public class LocalExecClientTest extends Thread {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        InternalLoggerFactory.setDefaultFactory(new GgSlf4JLoggerFactory(
+        InternalLoggerFactory.setDefaultFactory(new WaarpSlf4JLoggerFactory(
                 Level.WARN));
         InetAddress addr;
         byte []loop = {127,0,0,1};

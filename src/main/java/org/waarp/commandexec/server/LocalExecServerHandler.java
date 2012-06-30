@@ -45,8 +45,8 @@ import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.waarp.commandexec.utils.LocalExecDefaultResult;
-import org.waarp.common.logging.GgInternalLogger;
-import org.waarp.common.logging.GgInternalLoggerFactory;
+import org.waarp.common.logging.WaarpInternalLogger;
+import org.waarp.common.logging.WaarpInternalLoggerFactory;
 
 /**
  * Handles a server-side channel for LocalExec.
@@ -62,7 +62,7 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
     /**
      * Internal Logger
      */
-    private static final GgInternalLogger logger = GgInternalLoggerFactory
+    private static final WaarpInternalLogger logger = WaarpInternalLoggerFactory
             .getLogger(LocalExecServerHandler.class);
 
     protected boolean answered = false;
@@ -130,7 +130,7 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
         /**
          * Internal Logger
          */
-        private static final GgInternalLogger logger = GgInternalLoggerFactory
+        private static final WaarpInternalLogger logger = WaarpInternalLoggerFactory
                 .getLogger(GGLETimerTask.class);
         /*
          * (non-Javadoc)

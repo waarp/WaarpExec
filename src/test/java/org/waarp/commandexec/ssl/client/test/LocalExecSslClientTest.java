@@ -36,9 +36,9 @@ import org.jboss.netty.logging.InternalLoggerFactory;
 import org.waarp.commandexec.client.LocalExecClientHandler;
 import org.waarp.commandexec.ssl.client.LocalExecSslClientPipelineFactory;
 import org.waarp.commandexec.utils.LocalExecResult;
-import org.waarp.common.crypto.ssl.GgSecureKeyStore;
-import org.waarp.common.crypto.ssl.GgSslContextFactory;
-import org.waarp.common.logging.GgSlf4JLoggerFactory;
+import org.waarp.common.crypto.ssl.WaarpSecureKeyStore;
+import org.waarp.common.crypto.ssl.WaarpSslContextFactory;
+import org.waarp.common.logging.WaarpSlf4JLoggerFactory;
 
 import ch.qos.logback.classic.Level;
 
@@ -51,7 +51,7 @@ import ch.qos.logback.classic.Level;
  * With client authentication On a bi-core Centrino2 vPro: 3/s in 50 sequential, 27/s in 10 threads with 50 sequential
  *
  */
-public class LocalExecSslClient extends Thread {
+public class LocalExecSslClientTest extends Thread {
 
     static int nit = 50;
     static int nth = 10;
@@ -84,7 +84,7 @@ public class LocalExecSslClient extends Thread {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        InternalLoggerFactory.setDefaultFactory(new GgSlf4JLoggerFactory(
+        InternalLoggerFactory.setDefaultFactory(new WaarpSlf4JLoggerFactory(
                 Level.WARN));
         InetAddress addr;
         byte []loop = {127,0,0,1};
@@ -101,14 +101,14 @@ public class LocalExecSslClient extends Thread {
                 new NioClientSocketChannelFactory(threadPool, threadPool2));
         // Configure the pipeline factory.
         // First create the SSL part
-        GgSecureKeyStore ggSecureKeyStore;
+        WaarpSecureKeyStore ggSecureKeyStore;
         // For empty KeyStore
         if (keyStoreFilename == null) {
             ggSecureKeyStore =
-                new GgSecureKeyStore(keyStorePasswd, keyPasswd);
+                new WaarpSecureKeyStore(keyStorePasswd, keyPasswd);
         } else {
             ggSecureKeyStore =
-                new GgSecureKeyStore(keyStoreFilename, keyStorePasswd, keyPasswd);
+                new WaarpSecureKeyStore(keyStoreFilename, keyStorePasswd, keyPasswd);
         }
 
         if (keyTrustStoreFilename != null) {
@@ -117,13 +117,13 @@ public class LocalExecSslClient extends Thread {
         } else {
             ggSecureKeyStore.initEmptyTrustStore();
         }
-        GgSslContextFactory ggSslContextFactory = new GgSslContextFactory(ggSecureKeyStore, false);
+        WaarpSslContextFactory waarpSslContextFactory = new WaarpSslContextFactory(ggSecureKeyStore, false);
         localExecClientPipelineFactory =
-                new LocalExecSslClientPipelineFactory(ggSslContextFactory);
+                new LocalExecSslClientPipelineFactory(waarpSslContextFactory);
         bootstrap.setPipelineFactory(localExecClientPipelineFactory);
         try {
             // Parse options.
-            LocalExecSslClient client = new LocalExecSslClient();
+            LocalExecSslClientTest client = new LocalExecSslClientTest();
             // run once
             long first = System.currentTimeMillis();
             client.connect();
@@ -156,7 +156,7 @@ public class LocalExecSslClient extends Thread {
             first = System.currentTimeMillis();
             // Starts all thread with a default number of execution
             for (int i = 0; i < nth; i ++) {
-                executorService.submit(new LocalExecSslClient());
+                executorService.submit(new LocalExecSslClientTest());
             }
             Thread.sleep(500);
             executorService.shutdown();
@@ -192,7 +192,7 @@ public class LocalExecSslClient extends Thread {
     /**
      * Simple constructor
      */
-    public LocalExecSslClient() {
+    public LocalExecSslClientTest() {
     }
 
     private Channel channel;

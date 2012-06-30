@@ -27,8 +27,8 @@ import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.waarp.commandexec.server.LocalExecServerHandler;
 import org.waarp.commandexec.server.LocalExecServerPipelineFactory;
-import org.waarp.common.logging.GgInternalLogger;
-import org.waarp.common.logging.GgInternalLoggerFactory;
+import org.waarp.common.logging.WaarpInternalLogger;
+import org.waarp.common.logging.WaarpInternalLoggerFactory;
 
 
 /**
@@ -39,7 +39,7 @@ public class LocalExecSslServerHandler extends LocalExecServerHandler {
     /**
      * Internal Logger
      */
-    private static final GgInternalLogger logger = GgInternalLoggerFactory
+    private static final WaarpInternalLogger logger = WaarpInternalLoggerFactory
             .getLogger(LocalExecSslServerHandler.class);
 
     /**

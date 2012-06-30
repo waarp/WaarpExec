@@ -31,7 +31,7 @@ import org.jboss.netty.handler.codec.string.StringDecoder;
 import org.jboss.netty.handler.codec.string.StringEncoder;
 import org.waarp.commandexec.client.LocalExecClientHandler;
 import org.waarp.commandexec.client.LocalExecClientPipelineFactory;
-import org.waarp.common.crypto.ssl.GgSslContextFactory;
+import org.waarp.common.crypto.ssl.WaarpSslContextFactory;
 
 
 /**
@@ -43,11 +43,11 @@ import org.waarp.common.crypto.ssl.GgSslContextFactory;
  */
 public class LocalExecSslClientPipelineFactory extends LocalExecClientPipelineFactory {
 
-    private final GgSslContextFactory ggSslContextFactory;
+    private final WaarpSslContextFactory waarpSslContextFactory;
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
-    public LocalExecSslClientPipelineFactory(GgSslContextFactory ggSslContextFactory) {
-        this.ggSslContextFactory = ggSslContextFactory;
+    public LocalExecSslClientPipelineFactory(WaarpSslContextFactory waarpSslContextFactory) {
+        this.waarpSslContextFactory = waarpSslContextFactory;
     }
 
     public ChannelPipeline getPipeline() throws Exception {
@@ -56,8 +56,8 @@ public class LocalExecSslClientPipelineFactory extends LocalExecClientPipelineFa
 
         // Add SSL as first element in the pipeline
         pipeline.addLast("ssl",
-                ggSslContextFactory.initPipelineFactory(false,
-                ggSslContextFactory.needClientAuthentication(), false, executor));
+                waarpSslContextFactory.initPipelineFactory(false,
+                waarpSslContextFactory.needClientAuthentication(), false, executor));
         // Add the text line codec combination first,
         pipeline.addLast("framer", new DelimiterBasedFrameDecoder(8192,
                 Delimiters.lineDelimiter()));

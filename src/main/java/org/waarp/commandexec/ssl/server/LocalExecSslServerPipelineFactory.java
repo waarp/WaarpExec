@@ -33,7 +33,7 @@ import org.jboss.netty.handler.codec.string.StringEncoder;
 import org.waarp.commandexec.server.LocalExecServerHandler;
 import org.waarp.commandexec.server.LocalExecServerPipelineFactory;
 import org.waarp.commandexec.utils.LocalExecDefaultResult;
-import org.waarp.common.crypto.ssl.GgSslContextFactory;
+import org.waarp.common.crypto.ssl.WaarpSslContextFactory;
 
 
 /**
@@ -44,28 +44,28 @@ import org.waarp.common.crypto.ssl.GgSslContextFactory;
  */
 public class LocalExecSslServerPipelineFactory extends LocalExecServerPipelineFactory {
 
-    private final GgSslContextFactory ggSslContextFactory;
+    private final WaarpSslContextFactory waarpSslContextFactory;
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
     private long delay = LocalExecDefaultResult.MAXWAITPROCESS;
 
     /**
      * Constructor with default delay
-     * @param ggSslContextFactory
+     * @param waarpSslContextFactory
      */
-    public LocalExecSslServerPipelineFactory(GgSslContextFactory ggSslContextFactory) {
+    public LocalExecSslServerPipelineFactory(WaarpSslContextFactory waarpSslContextFactory) {
         // Default delay
-        this.ggSslContextFactory = ggSslContextFactory;
+        this.waarpSslContextFactory = waarpSslContextFactory;
     }
 
     /**
      * Constructor with a specific default delay
-     * @param ggSslContextFactory
+     * @param waarpSslContextFactory
      * @param newdelay
      */
-    public LocalExecSslServerPipelineFactory(GgSslContextFactory ggSslContextFactory, long newdelay) {
+    public LocalExecSslServerPipelineFactory(WaarpSslContextFactory waarpSslContextFactory, long newdelay) {
         delay = newdelay;
-        this.ggSslContextFactory = ggSslContextFactory;
+        this.waarpSslContextFactory = waarpSslContextFactory;
     }
 
     public ChannelPipeline getPipeline() throws Exception {
@@ -74,8 +74,8 @@ public class LocalExecSslServerPipelineFactory extends LocalExecServerPipelineFa
 
         // Add SSL as first element in the pipeline
         pipeline.addLast("ssl",
-                ggSslContextFactory.initPipelineFactory(true,
-                        ggSslContextFactory.needClientAuthentication(), false, executor));
+                waarpSslContextFactory.initPipelineFactory(true,
+                        waarpSslContextFactory.needClientAuthentication(), false, executor));
         // Add the text line codec combination first,
         pipeline.addLast("framer", new DelimiterBasedFrameDecoder(8192,
                 Delimiters.lineDelimiter()));

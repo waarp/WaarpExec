@@ -30,9 +30,9 @@ import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.jboss.netty.logging.InternalLoggerFactory;
 import org.waarp.commandexec.utils.LocalExecDefaultResult;
-import org.waarp.common.crypto.ssl.GgSecureKeyStore;
-import org.waarp.common.crypto.ssl.GgSslContextFactory;
-import org.waarp.common.logging.GgSlf4JLoggerFactory;
+import org.waarp.common.crypto.ssl.WaarpSecureKeyStore;
+import org.waarp.common.crypto.ssl.WaarpSslContextFactory;
+import org.waarp.common.logging.WaarpSlf4JLoggerFactory;
 
 /**
  * LocalExec server Main method.
@@ -55,7 +55,7 @@ public class LocalExecSslServer {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        InternalLoggerFactory.setDefaultFactory(new GgSlf4JLoggerFactory(null));
+        InternalLoggerFactory.setDefaultFactory(new WaarpSlf4JLoggerFactory(null));
         int port = 9999;
         InetAddress addr;
         long delay = LocalExecDefaultResult.MAXWAITPROCESS;
@@ -88,19 +88,19 @@ public class LocalExecSslServer {
         ServerBootstrap bootstrap = new ServerBootstrap(
                 new NioServerSocketChannelFactory(threadPool, threadPool2));
         // Load the KeyStore (No certificates)
-        GgSecureKeyStore ggSecureKeyStore =
-            new GgSecureKeyStore(keyStoreFilename, keyStorePasswd, keyPassword);
+        WaarpSecureKeyStore ggSecureKeyStore =
+            new WaarpSecureKeyStore(keyStoreFilename, keyStorePasswd, keyPassword);
         if (trustStoreFilename != null) {
             // Include certificates
             ggSecureKeyStore.initTrustStore(trustStoreFilename, trustStorePasswd, true);
         } else {
             ggSecureKeyStore.initEmptyTrustStore();
         }
-        GgSslContextFactory ggSslContextFactory =
-            new GgSslContextFactory(ggSecureKeyStore, true);
+        WaarpSslContextFactory waarpSslContextFactory =
+            new WaarpSslContextFactory(ggSecureKeyStore, true);
         // Configure the pipeline factory.
         bootstrap.setPipelineFactory(
-                new LocalExecSslServerPipelineFactory(ggSslContextFactory, delay));
+                new LocalExecSslServerPipelineFactory(waarpSslContextFactory, delay));
 
         // Bind and start to accept incoming connections only on local address.
         bootstrap.bind(new InetSocketAddress(addr, port));

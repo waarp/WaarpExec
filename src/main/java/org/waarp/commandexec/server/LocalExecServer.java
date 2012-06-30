@@ -30,7 +30,7 @@ import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.jboss.netty.logging.InternalLoggerFactory;
 import org.waarp.commandexec.utils.LocalExecDefaultResult;
-import org.waarp.common.logging.GgSlf4JLoggerFactory;
+import org.waarp.common.logging.WaarpSlf4JLoggerFactory;
 
 /**
  * LocalExec server Main method.
@@ -52,7 +52,7 @@ public class LocalExecServer {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        InternalLoggerFactory.setDefaultFactory(new GgSlf4JLoggerFactory(null));
+        InternalLoggerFactory.setDefaultFactory(new WaarpSlf4JLoggerFactory(null));
         int port = 9999;
         InetAddress addr;
         long delay = LocalExecDefaultResult.MAXWAITPROCESS;

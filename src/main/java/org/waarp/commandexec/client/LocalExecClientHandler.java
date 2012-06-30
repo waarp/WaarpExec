@@ -28,9 +28,9 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.waarp.commandexec.utils.LocalExecDefaultResult;
 import org.waarp.commandexec.utils.LocalExecResult;
-import org.waarp.common.future.WarpFuture;
-import org.waarp.common.logging.WarpInternalLogger;
-import org.waarp.common.logging.WarpInternalLoggerFactory;
+import org.waarp.common.future.WaarpFuture;
+import org.waarp.common.logging.WaarpInternalLogger;
+import org.waarp.common.logging.WaarpInternalLoggerFactory;
 
 /**
  * Handles a client-side channel for LocalExec
@@ -42,14 +42,14 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
     /**
      * Internal Logger
      */
-    private static final WarpInternalLogger logger = WarpInternalLoggerFactory
+    private static final WaarpInternalLogger logger = WaarpInternalLoggerFactory
             .getLogger(LocalExecClientHandler.class);
 
 
     private LocalExecResult result;
     private StringBuilder back;
     private boolean firstMessage = true;
-    private GgFuture future;
+    private WaarpFuture future;
     protected LocalExecClientPipelineFactory factory = null;
     /**
      * Constructor
@@ -65,7 +65,7 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
         this.result = new LocalExecResult(LocalExecDefaultResult.NoStatus);
         this.back = new StringBuilder();
         this.firstMessage = true;
-        this.future = new GgFuture(true);
+        this.future = new WaarpFuture(true);
     }
 
     /* (non-Javadoc)
