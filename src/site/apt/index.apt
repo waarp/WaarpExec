@@ -1,10 +1,10 @@
-GoldenGate Exec
+Waarp Exec
 
-  GoldenGateExec is mainly a runner of system tasks in a different daemon, in order to get high performance.
+  WaarpExec is mainly a runner of system tasks in a different daemon, in order to get high performance.
 
 Dependency
 
-  It is based mainly on the NETTY framework (NIO great framework support at {{http://www.jboss.org/netty}}
+  It is based mainly on the NETTY framework (NIO great framework support at {{http://netty.io}}
   and is tend to be really efficient, both in term of memory, threads and network bandwidth.
 
 Specificities
