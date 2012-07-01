@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pmd version="4.3" timestamp="2012-07-01T23:22:18.719">
+<file name="J:\Git\github\waarp-digest\WaarpExec\src\main\java\org\waarp\commandexec\client\LocalExecClientHandler.java">
+<violation beginline="86" endline="90" begincolumn="17" endcolumn="17" rule="ConfusingTernary" ruleset="Design Rules" package="org.waarp.commandexec.client" class="LocalExecClientHandler" method="initExecClient" externalInfoUrl="http://pmd.sourceforge.net/rules/design.html#ConfusingTernary" priority="3">
+Avoid if (x != y) ..; else ..;
+</violation>
+<violation beginline="144" endline="148" begincolumn="13" endcolumn="13" rule="ConfusingTernary" ruleset="Design Rules" package="org.waarp.commandexec.client" class="LocalExecClientHandler" method="finalizeMessage" externalInfoUrl="http://pmd.sourceforge.net/rules/design.html#ConfusingTernary" priority="3">
+Avoid if (x != y) ..; else ..;
+</violation>
+</file>
+<file name="J:\Git\github\waarp-digest\WaarpExec\src\main\java\org\waarp\commandexec\server\LocalExecServer.java">
+<violation beginline="40" endline="81" begincolumn="30" endcolumn="1" rule="UseSingleton" ruleset="Design Rules" package="org.waarp.commandexec.server" class="LocalExecServer" externalInfoUrl="http://pmd.sourceforge.net/rules/design.html#UseSingleton" priority="3">
+All methods are static.  Consider using Singleton instead.  Alternatively, you could add a private constructor or make the class abstract to silence this warning.
+</violation>
+</file>
+<file name="J:\Git\github\waarp-digest\WaarpExec\src\main\java\org\waarp\commandexec\server\LocalExecServerHandler.java">
+<violation beginline="230" endline="235" begincolumn="21" endcolumn="21" rule="CollapsibleIfStatements" ruleset="Basic Rules" package="org.waarp.commandexec.server" class="LocalExecServerHandler" method="messageReceived" externalInfoUrl="http://pmd.sourceforge.net/rules/basic.html#CollapsibleIfStatements" priority="3">
+These nested if statements could be combined
+</violation>
+<violation beginline="275" endline="276" begincolumn="31" endcolumn="29" rule="EmptyCatchBlock" ruleset="Basic Rules" package="org.waarp.commandexec.server" class="LocalExecServerHandler" method="messageReceived" externalInfoUrl="http://pmd.sourceforge.net/rules/basic.html#EmptyCatchBlock" priority="3">
+Avoid empty catch blocks
+</violation>
+<violation beginline="286" endline="287" begincolumn="31" endcolumn="29" rule="EmptyCatchBlock" ruleset="Basic Rules" package="org.waarp.commandexec.server" class="LocalExecServerHandler" method="messageReceived" externalInfoUrl="http://pmd.sourceforge.net/rules/basic.html#EmptyCatchBlock" priority="3">
+Avoid empty catch blocks
+</violation>
+<violation beginline="298" endline="299" begincolumn="27" endcolumn="25" rule="EmptyCatchBlock" ruleset="Basic Rules" package="org.waarp.commandexec.server" class="LocalExecServerHandler" method="messageReceived" externalInfoUrl="http://pmd.sourceforge.net/rules/basic.html#EmptyCatchBlock" priority="3">
+Avoid empty catch blocks
+</violation>
+<violation beginline="310" endline="311" begincolumn="23" endcolumn="21" rule="EmptyCatchBlock" ruleset="Basic Rules" package="org.waarp.commandexec.server" class="LocalExecServerHandler" method="messageReceived" externalInfoUrl="http://pmd.sourceforge.net/rules/basic.html#EmptyCatchBlock" priority="3">
+Avoid empty catch blocks
+</violation>
+<violation beginline="323" endline="324" begincolumn="23" endcolumn="21" rule="EmptyCatchBlock" ruleset="Basic Rules" package="org.waarp.commandexec.server" class="LocalExecServerHandler" method="messageReceived" externalInfoUrl="http://pmd.sourceforge.net/rules/basic.html#EmptyCatchBlock" priority="3">
+Avoid empty catch blocks
+</violation>
+<violation beginline="329" endline="330" begincolumn="23" endcolumn="21" rule="EmptyCatchBlock" ruleset="Basic Rules" package="org.waarp.commandexec.server" class="LocalExecServerHandler" method="messageReceived" externalInfoUrl="http://pmd.sourceforge.net/rules/basic.html#EmptyCatchBlock" priority="3">
+Avoid empty catch blocks
+</violation>
+<violation beginline="357" endline="358" begincolumn="50" endcolumn="9" rule="EmptyIfStmt" ruleset="Basic Rules" package="org.waarp.commandexec.server" class="LocalExecServerHandler" method="exceptionCaught" externalInfoUrl="http://pmd.sourceforge.net/rules/basic.html#EmptyIfStmt" priority="3">
+Avoid empty if statements
+</violation>
+<violation beginline="358" endline="359" begincolumn="58" endcolumn="9" rule="EmptyIfStmt" ruleset="Basic Rules" package="org.waarp.commandexec.server" class="LocalExecServerHandler" method="exceptionCaught" externalInfoUrl="http://pmd.sourceforge.net/rules/basic.html#EmptyIfStmt" priority="3">
+Avoid empty if statements
+</violation>
+<violation beginline="374" endline="379" begincolumn="13" endcolumn="13" rule="CollapsibleIfStatements" ruleset="Basic Rules" package="org.waarp.commandexec.server" class="LocalExecServerHandler" method="exceptionCaught" externalInfoUrl="http://pmd.sourceforge.net/rules/basic.html#CollapsibleIfStatements" priority="3">
+These nested if statements could be combined
+</violation>
+</file>
+<file name="J:\Git\github\waarp-digest\WaarpExec\src\main\java\org\waarp\commandexec\ssl\server\LocalExecSslServer.java">
+<violation beginline="41" endline="108" begincolumn="33" endcolumn="1" rule="UseSingleton" ruleset="Design Rules" package="org.waarp.commandexec.ssl.server" class="LocalExecSslServer" externalInfoUrl="http://pmd.sourceforge.net/rules/design.html#UseSingleton" priority="3">
+All methods are static.  Consider using Singleton instead.  Alternatively, you could add a private constructor or make the class abstract to silence this warning.
+</violation>
+<violation beginline="76" endline="78" begincolumn="21" endcolumn="21" rule="AvoidDeeplyNestedIfStmts" ruleset="Design Rules" package="org.waarp.commandexec.ssl.server" class="LocalExecSslServer" method="main" externalInfoUrl="http://pmd.sourceforge.net/rules/design.html#AvoidDeeplyNestedIfStmts" priority="3">
+Deeply nested if..then statements are hard to read
+</violation>
+<violation beginline="93" endline="98" begincolumn="9" endcolumn="9" rule="ConfusingTernary" ruleset="Design Rules" package="org.waarp.commandexec.ssl.server" class="LocalExecSslServer" method="main" externalInfoUrl="http://pmd.sourceforge.net/rules/design.html#ConfusingTernary" priority="3">
+Avoid if (x != y) ..; else ..;
+</violation>
+</file>
+<file name="J:\Git\github\waarp-digest\WaarpExec\src\main\java\org\waarp\commandexec\utils\LocalExecResult.java">
+<violation beginline="72" endline="72" begincolumn="54" endcolumn="110" rule="ConfusingTernary" ruleset="Design Rules" package="org.waarp.commandexec.utils" class="LocalExecResult" method="toString" externalInfoUrl="http://pmd.sourceforge.net/rules/design.html#ConfusingTernary" priority="3">
+Avoid if (x != y) ..; else ..;
+</violation>
+</file>
+</pmd>
