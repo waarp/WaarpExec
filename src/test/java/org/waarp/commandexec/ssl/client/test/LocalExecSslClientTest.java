@@ -27,13 +27,16 @@ import java.net.UnknownHostException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
+import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import org.jboss.netty.handler.ssl.SslHandler;
 import org.jboss.netty.logging.InternalLoggerFactory;
-import org.waarp.commandexec.client.LocalExecClientHandler;
+import org.waarp.commandexec.ssl.client.LocalExecSslClientHandler;
 import org.waarp.commandexec.ssl.client.LocalExecSslClientPipelineFactory;
 import org.waarp.commandexec.utils.LocalExecResult;
 import org.waarp.common.crypto.ssl.WaarpSecureKeyStore;
@@ -53,23 +56,24 @@ import ch.qos.logback.classic.Level;
  */
 public class LocalExecSslClientTest extends Thread {
 
-    static int nit = 50;
-    static int nth = 10;
-    static String command = "d:\\GG\\testexec.bat";
+    static int nit = 30;
+    static int nth = 1;
+    static String command = "J:\\GG\\testexec.bat";
     static int port = 9999;
     static InetSocketAddress address;
     // with client authentication
-    static String keyStoreFilename = "d:\\GG\\R66\\certs\\testclient2.jks";
+    static String keyStoreFilename = "J:\\GG\\R66\\certs\\testclient2.jks";
     // without client authentication
     // static String keyStoreFilename = null;
     static String keyStorePasswd = "testclient2";
     static String keyPasswd = "client2";
-    static String keyTrustStoreFilename = "d:\\GG\\R66\\certs\\testclient.jks";
+    static String keyTrustStoreFilename = "J:\\GG\\R66\\certs\\testclient.jks";
     static String keyTrustStorePasswd = "testclient";
     static LocalExecResult result;
 
     static int ok = 0;
     static int ko = 0;
+    static AtomicInteger atomicInteger = new AtomicInteger();
 
     static ExecutorService threadPool;
     static ExecutorService threadPool2;
@@ -101,23 +105,23 @@ public class LocalExecSslClientTest extends Thread {
                 new NioClientSocketChannelFactory(threadPool, threadPool2));
         // Configure the pipeline factory.
         // First create the SSL part
-        WaarpSecureKeyStore ggSecureKeyStore;
+        WaarpSecureKeyStore WaarpSecureKeyStore;
         // For empty KeyStore
         if (keyStoreFilename == null) {
-            ggSecureKeyStore =
+            WaarpSecureKeyStore =
                 new WaarpSecureKeyStore(keyStorePasswd, keyPasswd);
         } else {
-            ggSecureKeyStore =
+            WaarpSecureKeyStore =
                 new WaarpSecureKeyStore(keyStoreFilename, keyStorePasswd, keyPasswd);
         }
 
         if (keyTrustStoreFilename != null) {
             // Load the client TrustStore
-            ggSecureKeyStore.initTrustStore(keyTrustStoreFilename, keyTrustStorePasswd, false);
+            WaarpSecureKeyStore.initTrustStore(keyTrustStoreFilename, keyTrustStorePasswd, false);
         } else {
-            ggSecureKeyStore.initEmptyTrustStore();
+            WaarpSecureKeyStore.initEmptyTrustStore();
         }
-        WaarpSslContextFactory waarpSslContextFactory = new WaarpSslContextFactory(ggSecureKeyStore, false);
+        WaarpSslContextFactory waarpSslContextFactory = new WaarpSslContextFactory(WaarpSecureKeyStore, false);
         localExecClientPipelineFactory =
                 new LocalExecSslClientPipelineFactory(waarpSslContextFactory);
         bootstrap.setPipelineFactory(localExecClientPipelineFactory);
@@ -229,46 +233,38 @@ public class LocalExecSslClientTest extends Thread {
      * Disconnect from the server
      */
     private void disconnect() {
-     // Close the connection. Make sure the close operation ends because
-        // all I/O operations are asynchronous in Netty.
-        try {
-            channel.close().await();
-        } catch (InterruptedException e) {
-        }
+    	SslHandler handler = (SslHandler) channel.getPipeline().get("ssl");
+    	Thread.yield();
+    	// Close the ssl and the connection.
+		handler.close().addListener(new ChannelFutureListener() {
+	        public void operationComplete(ChannelFuture future) {
+	        	try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+				}
+	            future.getChannel().close();
+	        }});
     }
     /**
      * Run method both for not threaded execution and threaded execution
      */
     private void runOnce() {
         // Initialize the command context
-        LocalExecClientHandler clientHandler =
-            (LocalExecClientHandler) channel.getPipeline().getLast();
-        clientHandler.initExecClient();
+        LocalExecSslClientHandler clientHandler =
+            (LocalExecSslClientHandler) channel.getPipeline().getLast();
         // Command to execute
-
-        ChannelFuture lastWriteFuture = null;
-        String line = command+"\n";
-        if (line != null) {
-            // Sends the received line to the server.
-            lastWriteFuture = channel.write(line);
-            // Wait until all messages are flushed before closing the channel.
-            if (lastWriteFuture != null) {
-                try {
-                    lastWriteFuture.await();
-                } catch (InterruptedException e) {
-                }
-            }
-            // Wait for the end of the exec command
-            LocalExecResult localExecResult = clientHandler.waitFor(10000);
-            int status = localExecResult.status;
-            if (status < 0) {
-                System.err.println("Status: " + status + "\nResult: " +
-                        localExecResult.result);
-                ko++;
-            } else {
-                ok++;
-                result = localExecResult;
-            }
+        String line = command+" "+atomicInteger.incrementAndGet();
+        clientHandler.initExecClient(0, line);
+        // Wait for the end of the exec command
+        LocalExecResult localExecResult = clientHandler.waitFor(10000);
+        int status = localExecResult.status;
+        if (status < 0) {
+            System.err.println("Status: " + status + "\nResult: " +
+                    localExecResult.result);
+            ko++;
+        } else {
+            ok++;
+            result = localExecResult;
         }
     }
     /**
@@ -276,34 +272,20 @@ public class LocalExecSslClientTest extends Thread {
      */
     private void runFinal() {
         // Initialize the command context
-        LocalExecClientHandler clientHandler =
-            (LocalExecClientHandler) channel.getPipeline().getLast();
-        clientHandler.initExecClient();
+        LocalExecSslClientHandler clientHandler =
+            (LocalExecSslClientHandler) channel.getPipeline().getLast();
         // Command to execute
-
-        ChannelFuture lastWriteFuture = null;
-        String line = "-1000 stop\n";
-        if (line != null) {
-            // Sends the received line to the server.
-            lastWriteFuture = channel.write(line);
-            // Wait until all messages are flushed before closing the channel.
-            if (lastWriteFuture != null) {
-                try {
-                    lastWriteFuture.await();
-                } catch (InterruptedException e) {
-                }
-            }
-            // Wait for the end of the exec command
-            LocalExecResult localExecResult = clientHandler.waitFor(10000);
-            int status = localExecResult.status;
-            if (status < 0) {
-                System.err.println("Status: " + status + "\nResult: " +
-                        localExecResult.result);
-                ko++;
-            } else {
-                ok++;
-                result = localExecResult;
-            }
+        clientHandler.initExecClient(-1000, "stop");
+        // Wait for the end of the exec command
+        LocalExecResult localExecResult = clientHandler.waitFor(10000);
+        int status = localExecResult.status;
+        if (status < 0) {
+            System.err.println("Status: " + status + "\nResult: " +
+                    localExecResult.result);
+            ko++;
+        } else {
+            ok++;
+            result = localExecResult;
         }
     }
 }

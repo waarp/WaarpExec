@@ -27,6 +27,7 @@ import java.net.UnknownHostException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.Channel;
@@ -49,15 +50,16 @@ import ch.qos.logback.classic.Level;
  */
 public class LocalExecClientTest extends Thread {
 
-    static int nit = 1;
-    static int nth = 1;
-    static String command = "d:\\GG\\testexec.bat";
+    static int nit = 20;
+    static int nth = 10;
+    static String command = "J:\\GG\\testexec.bat";
     static int port = 9999;
     static InetSocketAddress address;
 
     static LocalExecResult result;
     static int ok = 0;
     static int ko = 0;
+    static AtomicInteger atomicInteger = new AtomicInteger();
 
     static ExecutorService threadPool;
     static ExecutorService threadPool2;
@@ -197,9 +199,10 @@ public class LocalExecClientTest extends Thread {
      * Disconnect from the server
      */
     private void disconnect() {
-     // Close the connection. Make sure the close operation ends because
+    	// Close the connection. Make sure the close operation ends because
         // all I/O operations are asynchronous in Netty.
         try {
+        	Thread.sleep(10);
             channel.close().await();
         } catch (InterruptedException e) {
         }
@@ -212,32 +215,19 @@ public class LocalExecClientTest extends Thread {
      // Initialize the command context
         LocalExecClientHandler clientHandler =
             (LocalExecClientHandler) channel.getPipeline().getLast();
-        clientHandler.initExecClient();
         // Command to execute
-
-        ChannelFuture lastWriteFuture = null;
-        String line = command+"\n";
-        if (line != null) {
-            // Sends the received line to the server.
-            lastWriteFuture = channel.write(line);
-            // Wait until all messages are flushed before closing the channel.
-            if (lastWriteFuture != null) {
-                try {
-                    lastWriteFuture.await();
-                } catch (InterruptedException e) {
-                }
-            }
-            // Wait for the end of the exec command
-            LocalExecResult localExecResult = clientHandler.waitFor(10000);
-            int status = localExecResult.status;
-            if (status < 0) {
-                System.err.println("Status: " + status + "\nResult: " +
-                        localExecResult.result);
-                ko++;
-            } else {
-                ok++;
-                result = localExecResult;
-            }
+        String line = command+" "+atomicInteger.incrementAndGet();
+        clientHandler.initExecClient(0, line);
+        // Wait for the end of the exec command
+        LocalExecResult localExecResult = clientHandler.waitFor(10000);
+        int status = localExecResult.status;
+        if (status < 0) {
+            System.err.println(line+" Status: " + status + "\tResult: " +
+                    localExecResult.result);
+            ko++;
+        } else {
+            ok++;
+            result = localExecResult;
         }
     }
     /**
@@ -247,32 +237,18 @@ public class LocalExecClientTest extends Thread {
         // Initialize the command context
         LocalExecClientHandler clientHandler =
             (LocalExecClientHandler) channel.getPipeline().getLast();
-        clientHandler.initExecClient();
         // Command to execute
-
-        ChannelFuture lastWriteFuture = null;
-        String line = "-1000 stop\n";
-        if (line != null) {
-            // Sends the received line to the server.
-            lastWriteFuture = channel.write(line);
-            // Wait until all messages are flushed before closing the channel.
-            if (lastWriteFuture != null) {
-                try {
-                    lastWriteFuture.await();
-                } catch (InterruptedException e) {
-                }
-            }
-            // Wait for the end of the exec command
-            LocalExecResult localExecResult = clientHandler.waitFor(10000);
-            int status = localExecResult.status;
-            if (status < 0) {
-                System.err.println("Status: " + status + "\nResult: " +
-                        localExecResult.result);
-                ko++;
-            } else {
-                ok++;
-                result = localExecResult;
-            }
+        clientHandler.initExecClient(-1000, "stop");
+        // Wait for the end of the exec command
+        LocalExecResult localExecResult = clientHandler.waitFor(10000);
+        int status = localExecResult.status;
+        if (status < 0) {
+            System.err.println("Shutdown Status: " + status + "\nResult: " +
+                    localExecResult.result);
+            ko++;
+        } else {
+            ok++;
+            result = localExecResult;
         }
     }
 }

@@ -20,13 +20,18 @@
  */
 package org.waarp.commandexec.ssl.client;
 
+import javax.net.ssl.SSLException;
+
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
+import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.waarp.commandexec.client.LocalExecClientHandler;
 import org.waarp.commandexec.client.LocalExecClientPipelineFactory;
+import org.waarp.commandexec.utils.LocalExecDefaultResult;
 import org.waarp.common.logging.WaarpInternalLogger;
 import org.waarp.common.logging.WaarpInternalLoggerFactory;
 
@@ -53,7 +58,7 @@ public class LocalExecSslClientHandler extends LocalExecClientHandler {
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e)
             throws Exception {
-        initExecClient();
+    	channel = ctx.getChannel();
         SslHandler sslHandler = ctx.getPipeline().get(SslHandler.class);
         // Begin handshake
         ChannelFuture handshakeFuture = sslHandler.handshake();
@@ -68,5 +73,38 @@ public class LocalExecSslClientHandler extends LocalExecClientHandler {
                 }
             }
         });
+    }
+    
+    @Override
+	public void actionBeforeClose(Channel channel) {
+    	SslHandler handler = (SslHandler) channel.getPipeline().get("ssl");
+    	try {
+			handler.close().await();
+		} catch (InterruptedException e1) {
+		}
+	}
+	public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
+        logger.warn("Unexpected exception from downstream while get information: "+firstMessage,
+                e.getCause());
+        if (firstMessage) {
+            firstMessage = false;
+            result.set(LocalExecDefaultResult.BadTransmition);
+            result.exception = (Exception) e.getCause();
+            back = new StringBuilder("Error in LocalExec: ");
+            back.append(result.exception.getMessage());
+            back.append('\n');
+        } else {
+        	if (e.getCause() instanceof SSLException) {
+        		// ignore ?
+        		logger.warn("Ignore exception ?", e.getCause());
+        		return;
+        	}
+            back.append("\nERROR while receiving answer: ");
+            result.exception = (Exception) e.getCause();
+            back.append(result.exception.getMessage());
+            back.append('\n');
+        }
+        actionBeforeClose(e.getChannel());
+        e.getChannel().close();
     }
 }

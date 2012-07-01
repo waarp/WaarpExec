@@ -75,7 +75,7 @@ public class LocalExecSslServerPipelineFactory extends LocalExecServerPipelineFa
         // Add SSL as first element in the pipeline
         pipeline.addLast("ssl",
                 waarpSslContextFactory.initPipelineFactory(true,
-                        waarpSslContextFactory.needClientAuthentication(), false, executor));
+                        waarpSslContextFactory.needClientAuthentication(), true, executor));
         // Add the text line codec combination first,
         pipeline.addLast("framer", new DelimiterBasedFrameDecoder(8192,
                 Delimiters.lineDelimiter()));

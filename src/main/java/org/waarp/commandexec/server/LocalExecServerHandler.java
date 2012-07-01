@@ -74,9 +74,9 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
      */
     public static boolean isShutdown(Channel channel) {
         if (isShutdown) {
-            channel.write(LocalExecDefaultResult.ConnectionRefused.result);
+            channel.write(LocalExecDefaultResult.ConnectionRefused.status+" "+LocalExecDefaultResult.ConnectionRefused.result+"\n");
             try {
-                channel.write(LocalExecDefaultResult.ENDOFCOMMAND).await();
+                channel.write(LocalExecDefaultResult.ENDOFCOMMAND+"\n").await();
             } catch (InterruptedException e) {
             }
             Channels.close(channel);
@@ -198,7 +198,6 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
         String response;
         response = LocalExecDefaultResult.NoStatus.status+" "+
             LocalExecDefaultResult.NoStatus.result;
-        boolean isLocallyShutdown = false;
         ExecuteWatchdog watchdog = null;
         try {
             if (request.length() == 0) {
@@ -219,12 +218,7 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                     // Shutdown Order
                     isShutdown = true;
                     logger.warn("Shutdown order received");
-                    isLocallyShutdown = isShutdown(evt.getChannel());
-                    // Wait the specified time
-                    try {
-                        Thread.sleep((-tempDelay/10)*10);
-                    } catch (InterruptedException e) {
-                    }
+                    response = LocalExecDefaultResult.ShutdownOnGoing.status+" "+LocalExecDefaultResult.ShutdownOnGoing.result;
                     Thread thread = new GGLEThreadShutdown(factory);
                     thread.start();
                     return;
@@ -337,9 +331,6 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                 }
             }
         } finally {
-            if (isLocallyShutdown) {
-                return;
-            }
             // We do not need to write a ChannelBuffer here.
             // We know the encoder inserted at LocalExecPipelineFactory will do the
             // conversion.
@@ -349,15 +340,13 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                 watchdog.stop();
             }
             logger.info("End of Command: "+request+" : "+response);
-            evt.getChannel().write(LocalExecDefaultResult.ENDOFCOMMAND);
+            evt.getChannel().write(LocalExecDefaultResult.ENDOFCOMMAND+"\n");
         }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-        if (answered) {
-            logger.debug("Exception while answered: ",e.getCause());
-        } else {
+        if (!answered) {
             logger.error("Unexpected exception from downstream while not answered.", e
                 .getCause());
         }
@@ -369,14 +358,23 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
         } else if (e1 instanceof ClosedChannelException) {
         } else if (e1 instanceof NullPointerException) {
             if (e.getChannel().isConnected()) {
+                if (answered) {
+                	logger.debug("Exception while answered: ",e.getCause());
+                }
                 e.getChannel().close();
             }
         } else if (e1 instanceof IOException) {
             if (e.getChannel().isConnected()) {
+                if (answered) {
+                	logger.debug("Exception while answered: ",e.getCause());
+                }
                 e.getChannel().close();
             }
         } else if (e1 instanceof RejectedExecutionException) {
             if (e.getChannel().isConnected()) {
+                if (answered) {
+                	logger.debug("Exception while answered: ",e.getCause());
+                }
                 e.getChannel().close();
             }
         }

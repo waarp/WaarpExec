@@ -26,17 +26,18 @@ package org.waarp.commandexec.utils;
  *
  */
 public class LocalExecDefaultResult {
-    public static LocalExecResult NoCommand = new LocalExecResult(false, -1, null, "No Command\n");
-    public static LocalExecResult BadTransmition = new LocalExecResult(false, -2, null, "Bad Transmission\n");
-    public static LocalExecResult NoMessage = new LocalExecResult(false, -3, null, "No Message received\n");
-    public static LocalExecResult NotExecutable = new LocalExecResult(false, -4, null, "Not Executable\n");
-    public static LocalExecResult BadExecution = new LocalExecResult(false, -5, null, "Bad Execution\n");
-    public static LocalExecResult TimeOutExecution = new LocalExecResult(false, -6, null, "TimeOut Execution\n");
-    public static LocalExecResult InternalError = new LocalExecResult(false, -7, null, "Internal Error\n");
-    public static LocalExecResult NoStatus = new LocalExecResult(false, -8, null, "No Status\n");
-    public static LocalExecResult ConnectionRefused = new LocalExecResult(false, -9, null, "Exec Server refused the connection\n");
-    public static LocalExecResult CorrectExec = new LocalExecResult(false, 1, null, "Correctly Executed\n");
+    public static LocalExecResult NoCommand = new LocalExecResult(false, -1, null, "No Command");
+    public static LocalExecResult BadTransmition = new LocalExecResult(false, -2, null, "Bad Transmission");
+    public static LocalExecResult NoMessage = new LocalExecResult(false, -3, null, "No Message received");
+    public static LocalExecResult NotExecutable = new LocalExecResult(false, -4, null, "Not Executable");
+    public static LocalExecResult BadExecution = new LocalExecResult(false, -5, null, "Bad Execution");
+    public static LocalExecResult TimeOutExecution = new LocalExecResult(false, -6, null, "TimeOut Execution");
+    public static LocalExecResult InternalError = new LocalExecResult(false, -7, null, "Internal Error");
+    public static LocalExecResult NoStatus = new LocalExecResult(false, -8, null, "No Status");
+    public static LocalExecResult ConnectionRefused = new LocalExecResult(false, -9, null, "Exec Server refused the connection");
+    public static LocalExecResult ShutdownOnGoing = new LocalExecResult(false, -10, null, "Exec Server shutdown on going");
+    public static LocalExecResult CorrectExec = new LocalExecResult(false, 1, null, "Correctly Executed");
     public static long RETRYINMS = 500;
     public static long MAXWAITPROCESS = 60000;
-    public static String ENDOFCOMMAND = "$#GGEXEC END OF COMMAND#$\n";
+    public static String ENDOFCOMMAND = "$#GGEXEC END OF COMMAND#$";
 }

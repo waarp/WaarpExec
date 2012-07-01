@@ -21,6 +21,7 @@
 package org.waarp.commandexec.client;
 
 
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.ExceptionEvent;
@@ -46,11 +47,15 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
             .getLogger(LocalExecClientHandler.class);
 
 
-    private LocalExecResult result;
-    private StringBuilder back;
-    private boolean firstMessage = true;
-    private WaarpFuture future;
+    protected LocalExecResult result;
+    protected StringBuilder back;
+    protected boolean firstMessage = true;
+    protected WaarpFuture future;
     protected LocalExecClientPipelineFactory factory = null;
+    protected long delay;
+    protected String command;
+    protected Channel channel;
+    protected WaarpFuture ready = new WaarpFuture(true);
     /**
      * Constructor
      */
@@ -60,12 +65,31 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
 
     /**
      * Initialize the client status for a new execution
+     * @param delay
+     * @param command
      */
-    public void initExecClient() {
+    public void initExecClient(long delay, String command) {
         this.result = new LocalExecResult(LocalExecDefaultResult.NoStatus);
         this.back = new StringBuilder();
         this.firstMessage = true;
         this.future = new WaarpFuture(true);
+        this.delay = delay;
+        this.command = command;
+        // Sends the received line to the server.
+        if (channel == null) {
+        	try {
+				ready.await();
+			} catch (InterruptedException e) {
+			}
+        }
+        try {
+	        if (this.delay != 0) {
+	        	channel.write(this.delay+" "+this.command+"\n").await();
+	        } else {
+	        	channel.write(this.command+"\n").await();
+	        }
+        } catch (InterruptedException e) {
+        }
     }
 
     /* (non-Javadoc)
@@ -74,8 +98,9 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e)
             throws Exception {
-        initExecClient();
-        factory.addChannel(ctx.getChannel());
+    	channel = ctx.getChannel();
+        factory.addChannel(channel);
+        ready.setSuccess();
     }
 
     /* (non-Javadoc)
@@ -99,7 +124,7 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e)
             throws Exception {
-        logger.debug("ChannelClosed");
+        logger.debug(this.command+":"+"ChannelClosed");
         if (!future.isDone()) {
             // Should not be
             finalizeMessage();
@@ -111,7 +136,6 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
      */
     private void finalizeMessage() {
         if (firstMessage) {
-            logger.warn(result.status+" "+result.result);
             result.set(LocalExecDefaultResult.NoMessage);
         } else {
             result.result = back.toString();
@@ -139,6 +163,13 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
         result.isSuccess = this.future.isSuccess();
         return result;
     }
+    
+    /**
+     * Action to do before close
+     */
+    public void actionBeforeClose(Channel channel) {
+    	// here nothing to do
+    }
 
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
@@ -152,16 +183,25 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
                 result.status = Integer.parseInt(mesg.substring(0, pos));
             } catch (NumberFormatException e1) {
                 // Error
+            	logger.debug(this.command+":"+"Bad Transmission: "+mesg+"\n\t"+back.toString());
                 result.set(LocalExecDefaultResult.BadTransmition);
                 back.append(mesg);
+                actionBeforeClose(e.getChannel());
                 ctx.getChannel().close();
                 return;
             }
             mesg = mesg.substring(pos+1);
-            result.result = mesg;
-            back.append(mesg);
-        } else if (LocalExecDefaultResult.ENDOFCOMMAND.startsWith(mesg)) {
-            logger.debug("Receive End of Command");
+            if (mesg.startsWith(LocalExecDefaultResult.ENDOFCOMMAND)) {
+                logger.debug(this.command+":"+"Receive End of Command");
+                result.result = LocalExecDefaultResult.NoMessage.result;
+                back.append(result.result);
+                this.finalizeMessage();
+            } else {
+            	result.result = mesg;
+            	back.append(mesg);
+            }
+        } else if (mesg.startsWith(LocalExecDefaultResult.ENDOFCOMMAND)) {
+            logger.debug(this.command+":"+"Receive End of Command");
             this.finalizeMessage();
         } else {
             back.append('\n');
@@ -171,7 +211,7 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-        logger.error("Unexpected exception from downstream while get information: "+firstMessage,
+        logger.warn(this.command+":"+"Unexpected exception from downstream while get information: "+firstMessage,
                 e.getCause());
         if (firstMessage) {
             firstMessage = false;
@@ -186,6 +226,7 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
             back.append(result.exception.getMessage());
             back.append('\n');
         }
+        actionBeforeClose(e.getChannel());
         e.getChannel().close();
     }
 }

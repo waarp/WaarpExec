@@ -88,16 +88,16 @@ public class LocalExecSslServer {
         ServerBootstrap bootstrap = new ServerBootstrap(
                 new NioServerSocketChannelFactory(threadPool, threadPool2));
         // Load the KeyStore (No certificates)
-        WaarpSecureKeyStore ggSecureKeyStore =
+        WaarpSecureKeyStore WaarpSecureKeyStore =
             new WaarpSecureKeyStore(keyStoreFilename, keyStorePasswd, keyPassword);
         if (trustStoreFilename != null) {
             // Include certificates
-            ggSecureKeyStore.initTrustStore(trustStoreFilename, trustStorePasswd, true);
+            WaarpSecureKeyStore.initTrustStore(trustStoreFilename, trustStorePasswd, true);
         } else {
-            ggSecureKeyStore.initEmptyTrustStore();
+            WaarpSecureKeyStore.initEmptyTrustStore();
         }
         WaarpSslContextFactory waarpSslContextFactory =
-            new WaarpSslContextFactory(ggSecureKeyStore, true);
+            new WaarpSslContextFactory(WaarpSecureKeyStore, true);
         // Configure the pipeline factory.
         bootstrap.setPipelineFactory(
                 new LocalExecSslServerPipelineFactory(waarpSslContextFactory, delay));
