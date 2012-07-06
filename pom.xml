@@ -7,7 +7,7 @@
   <name>WaarpExec</name>
   <description>The Waarp Exec project is about a Daemon for local execution of system commands
   (as System.exec) but through client/server model and not within the same JVM.</description>
-  <url>http://waarp.github.com/WaarpDigest</url>
+  <url>http://waarp.github.com/WaarpExec</url>
   <inceptionYear>2009</inceptionYear>
   <parent>
     <groupId>Waarp</groupId>
@@ -16,12 +16,12 @@
   </parent>
   <issueManagement>
 	<system>GitHub</system>
-  	<url>https://github.com/waarp/WaarpDigest/issues/</url>
+  	<url>https://github.com/waarp/WaarpExec/issues/</url>
   </issueManagement>
   <scm>
-  	<connection>scm:git:git://github.com/waarp/WaarpDigest.git</connection>
-  	<developerConnection>scm:git:git@github.com:YourID/WaarpDigest.git</developerConnection>
-  	<url>https://github.com/waarp/WaarpDigest</url>
+  	<connection>scm:git:git://github.com/waarp/WaarpExec.git</connection>
+  	<developerConnection>scm:git:git@github.com:YourID/WaarpExec.git</developerConnection>
+  	<url>https://github.com/waarp/WaarpExec</url>
   </scm>
   <licenses>
   	<license>
