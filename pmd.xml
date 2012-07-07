@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<pmd version="4.3" timestamp="2012-07-06T17:49:16.599">
+<pmd version="4.3" timestamp="2012-07-07T21:43:55.154">
 <file name="J:\Git\github\waarp-digest\WaarpExec\src\main\java\org\waarp\commandexec\client\LocalExecClientHandler.java">
 <violation beginline="86" endline="90" begincolumn="17" endcolumn="17" rule="ConfusingTernary" ruleset="Design Rules" package="org.waarp.commandexec.client" class="LocalExecClientHandler" method="initExecClient" externalInfoUrl="http://pmd.sourceforge.net/rules/design.html#ConfusingTernary" priority="3">
 Avoid if (x != y) ..; else ..;
