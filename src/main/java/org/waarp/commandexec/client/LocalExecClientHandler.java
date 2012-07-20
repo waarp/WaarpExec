@@ -29,6 +29,7 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.waarp.commandexec.utils.LocalExecDefaultResult;
 import org.waarp.commandexec.utils.LocalExecResult;
+import org.waarp.common.crypto.ssl.WaarpSslUtility;
 import org.waarp.common.future.WaarpFuture;
 import org.waarp.common.logging.WaarpInternalLogger;
 import org.waarp.common.logging.WaarpInternalLoggerFactory;
@@ -187,7 +188,7 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
                 result.set(LocalExecDefaultResult.BadTransmition);
                 back.append(mesg);
                 actionBeforeClose(e.getChannel());
-                ctx.getChannel().close();
+                WaarpSslUtility.closingSslChannel(ctx.getChannel());
                 return;
             }
             mesg = mesg.substring(pos+1);
@@ -227,6 +228,6 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
             back.append('\n');
         }
         actionBeforeClose(e.getChannel());
-        e.getChannel().close();
+        WaarpSslUtility.closingSslChannel(e.getChannel());
     }
 }

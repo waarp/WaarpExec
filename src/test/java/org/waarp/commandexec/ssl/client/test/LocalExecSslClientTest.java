@@ -32,15 +32,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
-import org.jboss.netty.handler.ssl.SslHandler;
 import org.jboss.netty.logging.InternalLoggerFactory;
 import org.waarp.commandexec.ssl.client.LocalExecSslClientHandler;
 import org.waarp.commandexec.ssl.client.LocalExecSslClientPipelineFactory;
 import org.waarp.commandexec.utils.LocalExecResult;
 import org.waarp.common.crypto.ssl.WaarpSecureKeyStore;
 import org.waarp.common.crypto.ssl.WaarpSslContextFactory;
+import org.waarp.common.crypto.ssl.WaarpSslUtility;
 import org.waarp.common.logging.WaarpSlf4JLoggerFactory;
 
 import ch.qos.logback.classic.Level;
@@ -51,13 +50,15 @@ import ch.qos.logback.classic.Level;
  * This class is an example of client.
  *
  * No client authentication On a bi-core Centrino2 vPro: 5/s in 50 sequential, 29/s in 10 threads with 50 sequential<br>
- * With client authentication On a bi-core Centrino2 vPro: 3/s in 50 sequential, 27/s in 10 threads with 50 sequential
+ * With client authentication On a bi-core Centrino2 vPro: 3/s in 50 sequential, 27/s in 10 threads with 50 sequential<br>
+ * No client authentication On a quad-core i7: 20/s in 50 sequential, 178/s in 10 threads with 50 sequential<br>
+ * With client authentication On a quad-core i7: 17/s in 50 sequential, 176/s in 10 threads with 50 sequential<br>
  *
  */
 public class LocalExecSslClientTest extends Thread {
 
-    static int nit = 30;
-    static int nth = 1;
+    static int nit = 50;
+    static int nth = 10;
     static String command = "J:\\GG\\testexec.bat";
     static int port = 9999;
     static InetSocketAddress address;
@@ -233,17 +234,14 @@ public class LocalExecSslClientTest extends Thread {
      * Disconnect from the server
      */
     private void disconnect() {
-    	SslHandler handler = (SslHandler) channel.getPipeline().get("ssl");
-    	Thread.yield();
-    	// Close the ssl and the connection.
-		handler.close().addListener(new ChannelFutureListener() {
-	        public void operationComplete(ChannelFuture future) {
-	        	try {
-					Thread.sleep(10);
-				} catch (InterruptedException e) {
-				}
-	            future.getChannel().close();
-	        }});
+    	ChannelFuture closeFuture = WaarpSslUtility.closingSslChannel(channel);
+		try {
+			closeFuture.await(20);
+			if (!closeFuture.isDone()) {
+				Thread.sleep(10);
+	    	}
+		} catch (InterruptedException e) {
+		}
     }
     /**
      * Run method both for not threaded execution and threaded execution
