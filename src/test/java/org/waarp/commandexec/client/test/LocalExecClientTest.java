@@ -37,6 +37,7 @@ import org.jboss.netty.logging.InternalLoggerFactory;
 import org.waarp.commandexec.client.LocalExecClientHandler;
 import org.waarp.commandexec.client.LocalExecClientPipelineFactory;
 import org.waarp.commandexec.utils.LocalExecResult;
+import org.waarp.common.crypto.ssl.WaarpSslUtility;
 import org.waarp.common.logging.WaarpSlf4JLoggerFactory;
 
 import ch.qos.logback.classic.Level;
@@ -46,11 +47,12 @@ import ch.qos.logback.classic.Level;
  *
  * This class is an example of client.
  *
- * On a bi-core Centrino2 vPro: 18/s in 50 sequential, 30/s in 10 threads with 50 sequential
+ * On a bi-core Centrino2 vPro: 18/s in 50 sequential, 30/s in 10 threads with 50 sequential<br>
+ * On a quad-core i7: 29/s in 50 sequential, 187/s in 10 threads with 50 sequential
  */
 public class LocalExecClientTest extends Thread {
 
-    static int nit = 20;
+    static int nit = 50;
     static int nth = 10;
     static String command = "J:\\GG\\testexec.bat";
     static int port = 9999;
@@ -202,8 +204,8 @@ public class LocalExecClientTest extends Thread {
     	// Close the connection. Make sure the close operation ends because
         // all I/O operations are asynchronous in Netty.
         try {
-        	Thread.sleep(10);
-            channel.close().await();
+        	ChannelFuture closeFuture = WaarpSslUtility.closingSslChannel(channel);
+        	closeFuture.await();
         } catch (InterruptedException e) {
         }
     }

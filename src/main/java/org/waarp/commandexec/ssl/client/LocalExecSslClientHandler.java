@@ -32,6 +32,7 @@ import org.jboss.netty.handler.ssl.SslHandler;
 import org.waarp.commandexec.client.LocalExecClientHandler;
 import org.waarp.commandexec.client.LocalExecClientPipelineFactory;
 import org.waarp.commandexec.utils.LocalExecDefaultResult;
+import org.waarp.common.crypto.ssl.WaarpSslUtility;
 import org.waarp.common.logging.WaarpInternalLogger;
 import org.waarp.common.logging.WaarpInternalLoggerFactory;
 
@@ -63,13 +64,17 @@ public class LocalExecSslClientHandler extends LocalExecClientHandler {
         // Begin handshake
         ChannelFuture handshakeFuture = sslHandler.handshake();
         handshakeFuture.addListener(new ChannelFutureListener() {
-            public void operationComplete(ChannelFuture future)
+            public void operationComplete(ChannelFuture handshakeFuture)
                     throws Exception {
-                logger.debug("Handshake: "+future.isSuccess(),future.getCause());
-                if (future.isSuccess()) {
-                    factory.addChannel(future.getChannel());
+                logger.debug("Handshake: "+handshakeFuture.isSuccess(),handshakeFuture.getCause());
+                if (handshakeFuture.isSuccess()) {
+                    factory.addChannel(handshakeFuture.getChannel());
+                    ready.setSuccess();
                 } else {
-                    future.getChannel().close();
+                	handshakeFuture.getChannel().close();
+                    future.setFailure(handshakeFuture.getCause());
+                    future.cancel();
+                    ready.cancel();
                 }
             }
         });
@@ -77,13 +82,9 @@ public class LocalExecSslClientHandler extends LocalExecClientHandler {
     
     @Override
 	public void actionBeforeClose(Channel channel) {
-    	SslHandler handler = (SslHandler) channel.getPipeline().get("ssl");
-    	try {
-			handler.close().await();
-		} catch (InterruptedException e1) {
-		}
 	}
-	public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
+
+    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
         logger.warn("Unexpected exception from downstream while get information: "+firstMessage,
                 e.getCause());
         if (firstMessage) {
@@ -105,6 +106,6 @@ public class LocalExecSslClientHandler extends LocalExecClientHandler {
             back.append('\n');
         }
         actionBeforeClose(e.getChannel());
-        e.getChannel().close();
+        WaarpSslUtility.closingSslChannel(e.getChannel());
     }
 }

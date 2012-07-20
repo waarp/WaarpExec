@@ -44,13 +44,14 @@ public class LocalExecSslServer {
     static ExecutorService threadPool2;
 
     /**
-     * Takes 3 to 6 arguments (last 3 are optional arguments):<br>
+     * Takes 3 to 8 arguments (last 5 are optional arguments):<br>
      * - mandatory arguments: filename keystorepaswwd keypassword<br>
-     * - if no more arguments are provided, it implies 127.0.0.1 + 9999 port and no certificates<br>
+     * - if no more arguments are provided, it implies 127.0.0.1 + 9999 as port and no certificates<br>
      * - optional arguments:<br>
-     *  "trustfilename" "trustpassword"<br>
-     *  "trustfilename" "trustpassword" "addresse" "port"<br>
-     *  "trustfilename" "trustpassword" "addresse" "port" "default delay"<br>
+     *  "port"<br>
+     *  "port" "trustfilename" "trustpassword"<br>
+     *  "port" "trustfilename" "trustpassword" "addresse"<br>
+     *  "port" "trustfilename" "trustpassword" "addresse" "default delay"<br>
      * @param args
      * @throws Exception
      */
@@ -67,15 +68,17 @@ public class LocalExecSslServer {
             keyStoreFilename = args[0];
             keyStorePasswd = args[1];
             keyPassword = args[2];
-            if (args.length >= 5) {
-                trustStoreFilename = args[3];
-                trustStorePasswd = args[4];
-                if (args.length >= 7) {
-                    addr = InetAddress.getByName(args[5]);
-                    port = Integer.parseInt(args[6]);
-                    if (args.length > 7) {
-                        delay = Long.parseLong(args[7]);
-                    }
+            if (args.length >= 4) {
+                port = Integer.parseInt(args[3]);
+                if (args.length >= 6) {
+	                trustStoreFilename = args[4];
+	                trustStorePasswd = args[5];
+	                if (args.length >= 7) {
+	                    addr = InetAddress.getByName(args[6]);
+	                    if (args.length > 7) {
+	                        delay = Long.parseLong(args[7]);
+	                    }
+	                }
                 }
             }
         } else {
