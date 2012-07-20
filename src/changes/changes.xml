@@ -5,7 +5,13 @@
 		<author email="fredbregier at free.fr">Frederic Bregier</author>
 	</properties>
 	<body>
-		<release version="1.1.0" date="2012-07-01" description="First Waarp release">
+		<release version="1.1.2" date="2012-07-21" description="fix release">
+			<action dev="Frederic Bregier" type="fix">Ssl closing issue fix</action>
+		</release>
+	    <release version="1.1.1" date="2012-07-07" description="fix release">
+			<action dev="Frederic Bregier" type="fix">DetectionUtil and jar version</action>
+		</release>
+	    <release version="1.1.0" date="2012-07-01" description="First Waarp release">
 			<action dev="Frederic Bregier" type="fix">Refactorization</action>
 		</release>
 		<release version="1.0.6" date="2012-06-25" description="Last release">

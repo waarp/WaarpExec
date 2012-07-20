@@ -40,11 +40,11 @@ import org.apache.commons.exec.PumpStreamHandler;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.waarp.commandexec.utils.LocalExecDefaultResult;
+import org.waarp.common.crypto.ssl.WaarpSslUtility;
 import org.waarp.common.logging.WaarpInternalLogger;
 import org.waarp.common.logging.WaarpInternalLoggerFactory;
 
@@ -65,7 +65,7 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
     private static final WaarpInternalLogger logger = WaarpInternalLoggerFactory
             .getLogger(LocalExecServerHandler.class);
 
-    protected boolean answered = false;
+    protected volatile boolean answered = false;
 
     /**
      * Is the Local Exec Server going Shutdown
@@ -79,7 +79,7 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                 channel.write(LocalExecDefaultResult.ENDOFCOMMAND+"\n").await();
             } catch (InterruptedException e) {
             }
-            Channels.close(channel);
+            WaarpSslUtility.closingSslChannel(channel);
             return true;
         }
         return false;
@@ -361,21 +361,21 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                 if (answered) {
                 	logger.debug("Exception while answered: ",e.getCause());
                 }
-                e.getChannel().close();
+                WaarpSslUtility.closingSslChannel(e.getChannel());
             }
         } else if (e1 instanceof IOException) {
             if (e.getChannel().isConnected()) {
                 if (answered) {
                 	logger.debug("Exception while answered: ",e.getCause());
                 }
-                e.getChannel().close();
+                WaarpSslUtility.closingSslChannel(e.getChannel());
             }
         } else if (e1 instanceof RejectedExecutionException) {
             if (e.getChannel().isConnected()) {
                 if (answered) {
                 	logger.debug("Exception while answered: ",e.getCause());
                 }
-                e.getChannel().close();
+                WaarpSslUtility.closingSslChannel(e.getChannel());
             }
         }
     }
