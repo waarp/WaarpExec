@@ -66,7 +66,7 @@
 <a class="jxr_linenumber" name="56" href="#56">56</a>          <em class="jxr_comment">// Add SSL as first element in the pipeline</em>
 <a class="jxr_linenumber" name="57" href="#57">57</a>          pipeline.addLast(<span class="jxr_string">"ssl"</span>,
 <a class="jxr_linenumber" name="58" href="#58">58</a>                  waarpSslContextFactory.initPipelineFactory(false,
-<a class="jxr_linenumber" name="59" href="#59">59</a>                  waarpSslContextFactory.needClientAuthentication(), <strong class="jxr_keyword">true</strong>, executor));
+<a class="jxr_linenumber" name="59" href="#59">59</a>                  waarpSslContextFactory.needClientAuthentication(), false, executor));
 <a class="jxr_linenumber" name="60" href="#60">60</a>          <em class="jxr_comment">// Add the text line codec combination first,</em>
 <a class="jxr_linenumber" name="61" href="#61">61</a>          pipeline.addLast(<span class="jxr_string">"framer"</span>, <strong class="jxr_keyword">new</strong> DelimiterBasedFrameDecoder(8192,
 <a class="jxr_linenumber" name="62" href="#62">62</a>                  Delimiters.lineDelimiter()));
