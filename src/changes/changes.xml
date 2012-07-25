@@ -5,7 +5,11 @@
 		<author email="fredbregier at free.fr">Frederic Bregier</author>
 	</properties>
 	<body>
-		<release version="1.1.2" date="2012-07-21" description="fix release">
+		<release version="1.1.3" date="2012-07-25" description="Fix release">
+			<action dev="Frederic Bregier" type="fix">Ssl Fix</action>
+			<action dev="Frederic Bregier" type="fix">Upgrade jar dependencies</action>
+		</release>
+	    <release version="1.1.2" date="2012-07-21" description="fix release">
 			<action dev="Frederic Bregier" type="fix">Ssl closing issue fix</action>
 		</release>
 	    <release version="1.1.1" date="2012-07-07" description="fix release">

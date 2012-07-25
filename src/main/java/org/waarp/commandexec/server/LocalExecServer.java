@@ -25,12 +25,15 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
 import org.jboss.netty.logging.InternalLoggerFactory;
 import org.waarp.commandexec.utils.LocalExecDefaultResult;
 import org.waarp.common.logging.WaarpSlf4JLoggerFactory;
+import org.waarp.common.utility.WaarpThreadFactory;
 
 /**
  * LocalExec server Main method.
@@ -41,6 +44,10 @@ public class LocalExecServer {
 
     static ExecutorService threadPool;
     static ExecutorService threadPool2;
+    static OrderedMemoryAwareThreadPoolExecutor pipelineExecutor = 
+    		new OrderedMemoryAwareThreadPoolExecutor(
+			1000, 0, 0, 200, TimeUnit.MILLISECONDS,
+			new WaarpThreadFactory("CommandExecutor"));
 
     /**
      * Takes 3 optional arguments:<br>
@@ -73,7 +80,7 @@ public class LocalExecServer {
                 new NioServerSocketChannelFactory(threadPool, threadPool2));
 
         // Configure the pipeline factory.
-        bootstrap.setPipelineFactory(new LocalExecServerPipelineFactory(delay));
+        bootstrap.setPipelineFactory(new LocalExecServerPipelineFactory(delay, pipelineExecutor));
 
         // Bind and start to accept incoming connections only on local address.
         bootstrap.bind(new InetSocketAddress(addr, port));

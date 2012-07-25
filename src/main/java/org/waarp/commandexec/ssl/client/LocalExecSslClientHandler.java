@@ -23,12 +23,9 @@ package org.waarp.commandexec.ssl.client;
 import javax.net.ssl.SSLException;
 
 import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.handler.ssl.SslHandler;
 import org.waarp.commandexec.client.LocalExecClientHandler;
 import org.waarp.commandexec.client.LocalExecClientPipelineFactory;
 import org.waarp.commandexec.utils.LocalExecDefaultResult;
@@ -53,31 +50,21 @@ public class LocalExecSslClientHandler extends LocalExecClientHandler {
     public LocalExecSslClientHandler(LocalExecClientPipelineFactory factory) {
         super(factory);
     }
-    /* (non-Javadoc)
+    
+    @Override
+	public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+		WaarpSslUtility.addSslOpenedChannel(e.getChannel());
+		super.channelOpen(ctx, e);
+	}
+
+	/* (non-Javadoc)
      * @see org.jboss.netty.channel.SimpleChannelUpstreamHandler#channelConnected(org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.ChannelStateEvent)
      */
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e)
             throws Exception {
-    	channel = ctx.getChannel();
-        SslHandler sslHandler = ctx.getPipeline().get(SslHandler.class);
-        // Begin handshake
-        ChannelFuture handshakeFuture = sslHandler.handshake();
-        handshakeFuture.addListener(new ChannelFutureListener() {
-            public void operationComplete(ChannelFuture handshakeFuture)
-                    throws Exception {
-                logger.debug("Handshake: "+handshakeFuture.isSuccess(),handshakeFuture.getCause());
-                if (handshakeFuture.isSuccess()) {
-                    factory.addChannel(handshakeFuture.getChannel());
-                    ready.setSuccess();
-                } else {
-                	handshakeFuture.getChannel().close();
-                    future.setFailure(handshakeFuture.getCause());
-                    future.cancel();
-                    ready.cancel();
-                }
-            }
-        });
+    	WaarpSslUtility.setStatusSslConnectedChannel(e.getChannel(), true);
+        super.channelConnected(ctx, e);
     }
     
     @Override

@@ -20,15 +20,8 @@
  */
 package org.waarp.commandexec.ssl.server;
 
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.handler.ssl.SslHandler;
 import org.waarp.commandexec.server.LocalExecServerHandler;
 import org.waarp.commandexec.server.LocalExecServerPipelineFactory;
-import org.waarp.common.logging.WaarpInternalLogger;
-import org.waarp.common.logging.WaarpInternalLoggerFactory;
 
 
 /**
@@ -36,12 +29,7 @@ import org.waarp.common.logging.WaarpInternalLoggerFactory;
  *
  */
 public class LocalExecSslServerHandler extends LocalExecServerHandler {
-    /**
-     * Internal Logger
-     */
-    private static final WaarpInternalLogger logger = WaarpInternalLoggerFactory
-            .getLogger(LocalExecSslServerHandler.class);
-
+    
     /**
      * @param factory
      * @param newdelay
@@ -50,31 +38,5 @@ public class LocalExecSslServerHandler extends LocalExecServerHandler {
             long newdelay) {
         super(factory, newdelay);
     }
-    /* (non-Javadoc)
-     * @see org.jboss.netty.channel.SimpleChannelUpstreamHandler#channelConnected(org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.ChannelStateEvent)
-     */
-    @Override
-    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e)
-            throws Exception {
-        SslHandler sslHandler = ctx.getPipeline().get(SslHandler.class);
-        // Begin handshake
-        ChannelFuture handshakeFuture = sslHandler.handshake();
-        handshakeFuture.addListener(new ChannelFutureListener() {
-            public void operationComplete(ChannelFuture future)
-                    throws Exception {
-                logger.debug("Handshake: "+future.isSuccess(),future.getCause());
-                if (future.isSuccess()) {
-                    if (isShutdown(future.getChannel())) {
-                        answered = true;
-                        return;
-                    }
-                    answered = false;
-                    factory.addChannel(future.getChannel());
-                } else {
-                    answered = true;
-                    future.getChannel().close();
-                }
-            }
-        });
-    }
+
 }
