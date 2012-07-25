@@ -69,13 +69,6 @@ public class LocalExecClientPipelineFactory implements ChannelPipelineFactory {
         channelGroup.add(channel);
     }
     /**
-     * remove a channel to the ExecClient Group
-     * @param channel
-     */
-    public void removeChannel(Channel channel) {
-        channelGroup.remove(channel);
-    }
-    /**
      * Release internal resources
      */
     public void releaseResources() {

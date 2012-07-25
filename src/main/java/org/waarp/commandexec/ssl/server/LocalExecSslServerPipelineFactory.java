@@ -30,7 +30,9 @@ import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 import org.jboss.netty.handler.codec.frame.Delimiters;
 import org.jboss.netty.handler.codec.string.StringDecoder;
 import org.jboss.netty.handler.codec.string.StringEncoder;
-import org.waarp.commandexec.server.LocalExecServerHandler;
+import org.jboss.netty.handler.execution.ExecutionHandler;
+import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
+import org.jboss.netty.handler.ssl.SslHandler;
 import org.waarp.commandexec.server.LocalExecServerPipelineFactory;
 import org.waarp.commandexec.utils.LocalExecDefaultResult;
 import org.waarp.common.crypto.ssl.WaarpSslContextFactory;
@@ -46,15 +48,18 @@ public class LocalExecSslServerPipelineFactory extends LocalExecServerPipelineFa
 
     private final WaarpSslContextFactory waarpSslContextFactory;
     private final ExecutorService executor = Executors.newCachedThreadPool();
-
+    
     private long delay = LocalExecDefaultResult.MAXWAITPROCESS;
 
     /**
      * Constructor with default delay
      * @param waarpSslContextFactory
+     * @param omatpe
      */
-    public LocalExecSslServerPipelineFactory(WaarpSslContextFactory waarpSslContextFactory) {
+    public LocalExecSslServerPipelineFactory(WaarpSslContextFactory waarpSslContextFactory,
+    		OrderedMemoryAwareThreadPoolExecutor omatpe) {
         // Default delay
+    	super(omatpe);
         this.waarpSslContextFactory = waarpSslContextFactory;
     }
 
@@ -63,7 +68,9 @@ public class LocalExecSslServerPipelineFactory extends LocalExecServerPipelineFa
      * @param waarpSslContextFactory
      * @param newdelay
      */
-    public LocalExecSslServerPipelineFactory(WaarpSslContextFactory waarpSslContextFactory, long newdelay) {
+    public LocalExecSslServerPipelineFactory(WaarpSslContextFactory waarpSslContextFactory, 
+    		long newdelay, OrderedMemoryAwareThreadPoolExecutor omatpe) {
+    	super(omatpe);
         delay = newdelay;
         this.waarpSslContextFactory = waarpSslContextFactory;
     }
@@ -73,18 +80,20 @@ public class LocalExecSslServerPipelineFactory extends LocalExecServerPipelineFa
         ChannelPipeline pipeline = pipeline();
 
         // Add SSL as first element in the pipeline
-        pipeline.addLast("ssl",
-                waarpSslContextFactory.initPipelineFactory(true,
-                        waarpSslContextFactory.needClientAuthentication(), false, executor));
+        SslHandler sslhandler = waarpSslContextFactory.initPipelineFactory(true,
+                waarpSslContextFactory.needClientAuthentication(), false, executor);
+        sslhandler.setIssueHandshake(true);
+        pipeline.addLast("ssl", sslhandler);
         // Add the text line codec combination first,
         pipeline.addLast("framer", new DelimiterBasedFrameDecoder(8192,
                 Delimiters.lineDelimiter()));
+        pipeline.addLast("pipelineExecutor", new ExecutionHandler(omatpe));
         pipeline.addLast("decoder", new StringDecoder());
         pipeline.addLast("encoder", new StringEncoder());
 
         // and then business logic.
         // Could change it with a new fixed delay if necessary at construction
-        pipeline.addLast("handler", new LocalExecServerHandler(this, delay));
+        pipeline.addLast("handler", new LocalExecSslServerHandler(this, delay));
 
         return pipeline;
     }

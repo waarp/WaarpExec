@@ -83,6 +83,7 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
 			} catch (InterruptedException e) {
 			}
         }
+        logger.debug("write command: "+this.command);
         try {
 	        if (this.delay != 0) {
 	        	channel.write(this.delay+" "+this.command+"\n").await();
@@ -104,15 +105,6 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
         ready.setSuccess();
     }
 
-    /* (non-Javadoc)
-     * @see org.jboss.netty.channel.SimpleChannelUpstreamHandler#channelDisconnected(org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.ChannelStateEvent)
-     */
-    @Override
-    public void channelDisconnected(ChannelHandlerContext ctx,
-            ChannelStateEvent e) throws Exception {
-        this.factory.removeChannel(e.getChannel());
-    }
-
     /**
      * When closed, <br>
      * If no messaged were received => NoMessage error is set to future<br>
@@ -125,8 +117,7 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e)
             throws Exception {
-        logger.debug(this.command+":"+"ChannelClosed");
-        if (!future.isDone()) {
+        if (future == null || !future.isDone()) {
             // Should not be
             finalizeMessage();
         }

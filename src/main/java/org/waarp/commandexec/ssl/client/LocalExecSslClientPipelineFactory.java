@@ -29,6 +29,7 @@ import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 import org.jboss.netty.handler.codec.frame.Delimiters;
 import org.jboss.netty.handler.codec.string.StringDecoder;
 import org.jboss.netty.handler.codec.string.StringEncoder;
+import org.jboss.netty.handler.ssl.SslHandler;
 import org.waarp.commandexec.client.LocalExecClientPipelineFactory;
 import org.waarp.common.crypto.ssl.WaarpSslContextFactory;
 
@@ -54,9 +55,10 @@ public class LocalExecSslClientPipelineFactory extends LocalExecClientPipelineFa
         ChannelPipeline pipeline = Channels.pipeline();
 
         // Add SSL as first element in the pipeline
-        pipeline.addLast("ssl",
-                waarpSslContextFactory.initPipelineFactory(false,
-                waarpSslContextFactory.needClientAuthentication(), false, executor));
+        SslHandler sslhandler = waarpSslContextFactory.initPipelineFactory(false,
+                waarpSslContextFactory.needClientAuthentication(), false, executor);
+        sslhandler.setIssueHandshake(true);
+        pipeline.addLast("ssl", sslhandler);
         // Add the text line codec combination first,
         pipeline.addLast("framer", new DelimiterBasedFrameDecoder(8192,
                 Delimiters.lineDelimiter()));

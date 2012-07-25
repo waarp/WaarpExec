@@ -170,14 +170,7 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
         answered = false;
         factory.addChannel(ctx.getChannel());
     }
-    /* (non-Javadoc)
-     * @see org.jboss.netty.channel.SimpleChannelUpstreamHandler#channelDisconnected(org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.ChannelStateEvent)
-     */
-    @Override
-    public void channelDisconnected(ChannelHandlerContext ctx,
-            ChannelStateEvent e) throws Exception {
-        this.factory.removeChannel(e.getChannel());
-    }
+
     /**
      * Change the delay to the specific value. Need to be called before any receive message.
      * @param newdelay
