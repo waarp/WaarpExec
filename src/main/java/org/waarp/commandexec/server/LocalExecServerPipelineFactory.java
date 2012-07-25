@@ -31,6 +31,8 @@ import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 import org.jboss.netty.handler.codec.frame.Delimiters;
 import org.jboss.netty.handler.codec.string.StringDecoder;
 import org.jboss.netty.handler.codec.string.StringEncoder;
+import org.jboss.netty.handler.execution.ExecutionHandler;
+import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
 import org.waarp.commandexec.utils.LocalExecDefaultResult;
 
 /**
@@ -42,21 +44,25 @@ public class LocalExecServerPipelineFactory implements ChannelPipelineFactory {
 
     private long delay = LocalExecDefaultResult.MAXWAITPROCESS;
     private final ChannelGroup channelGroup = new DefaultChannelGroup("LocalExecServer");
+    protected final OrderedMemoryAwareThreadPoolExecutor omatpe;
 
     /**
      * Constructor with default delay
      * 
      */
-    public LocalExecServerPipelineFactory() {
+    public LocalExecServerPipelineFactory(OrderedMemoryAwareThreadPoolExecutor omatpe) {
         // Default delay
+        this.omatpe = omatpe;
     }
 
     /**
      * Constructor with a specific default delay
      * @param newdelay
      */
-    public LocalExecServerPipelineFactory(long newdelay) {
+    public LocalExecServerPipelineFactory(long newdelay,
+    		OrderedMemoryAwareThreadPoolExecutor omatpe) {
         delay = newdelay;
+        this.omatpe = omatpe;
     }
 
 
@@ -67,6 +73,7 @@ public class LocalExecServerPipelineFactory implements ChannelPipelineFactory {
         // Add the text line codec combination first,
         pipeline.addLast("framer", new DelimiterBasedFrameDecoder(8192,
                 Delimiters.lineDelimiter()));
+        pipeline.addLast("pipelineExecutor", new ExecutionHandler(omatpe));
         pipeline.addLast("decoder", new StringDecoder());
         pipeline.addLast("encoder", new StringEncoder());
 
@@ -83,13 +90,7 @@ public class LocalExecServerPipelineFactory implements ChannelPipelineFactory {
     public void addChannel(Channel channel) {
         channelGroup.add(channel);
     }
-    /**
-     * remove a channel to the ExecClient Group
-     * @param channel
-     */
-    public void removeChannel(Channel channel) {
-        channelGroup.remove(channel);
-    }
+
     /**
      * Release internal resources
      */

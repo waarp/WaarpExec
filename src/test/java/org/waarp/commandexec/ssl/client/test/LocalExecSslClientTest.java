@@ -220,11 +220,8 @@ public class LocalExecSslClientTest extends Thread {
         ChannelFuture future = bootstrap.connect(address);
 
         // Wait until the connection attempt succeeds or fails.
-        try {
-            channel = future.await().getChannel();
-        } catch (InterruptedException e) {
-        }
-        if (!future.isSuccess()) {
+        channel = WaarpSslUtility.waitforChannelReady(future);
+        if (channel == null) {
             System.err.println("Client Not Connected");
             future.getCause().printStackTrace();
             return;
@@ -234,14 +231,8 @@ public class LocalExecSslClientTest extends Thread {
      * Disconnect from the server
      */
     private void disconnect() {
-    	ChannelFuture closeFuture = WaarpSslUtility.closingSslChannel(channel);
-		try {
-			closeFuture.await(20);
-			if (!closeFuture.isDone()) {
-				Thread.sleep(10);
-	    	}
-		} catch (InterruptedException e) {
-		}
+    	WaarpSslUtility.closingSslChannel(channel);
+    	WaarpSslUtility.waitForClosingSslChannel(channel, 10000);
     }
     /**
      * Run method both for not threaded execution and threaded execution
