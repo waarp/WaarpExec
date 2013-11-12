@@ -24,6 +24,7 @@ package org.waarp.commandexec.server;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.channels.CancelledKeyException;
 import java.nio.channels.ClosedChannelException;
 import java.util.Map;
@@ -47,6 +48,7 @@ import org.waarp.commandexec.utils.LocalExecDefaultResult;
 import org.waarp.common.crypto.ssl.WaarpSslUtility;
 import org.waarp.common.logging.WaarpInternalLogger;
 import org.waarp.common.logging.WaarpInternalLoggerFactory;
+import org.waarp.common.utility.WaarpStringUtils;
 
 /**
  * Handles a server-side channel for LocalExec.
@@ -316,7 +318,11 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                     } catch (IOException e2) {
                     }
                 } else {
-                    response = status+" "+outputStream.toString();
+                    try {
+						response = status+" "+outputStream.toString(WaarpStringUtils.UTF8.name());
+					} catch (UnsupportedEncodingException e) {
+						response = status+" "+outputStream.toString();
+					}
                     try {
                         outputStream.close();
                     } catch (IOException e2) {
