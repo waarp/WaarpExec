@@ -20,9 +20,6 @@
  */
 package org.waarp.commandexec.ssl.client;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
@@ -44,7 +41,6 @@ import org.waarp.common.crypto.ssl.WaarpSslContextFactory;
 public class LocalExecSslClientPipelineFactory extends LocalExecClientPipelineFactory {
 
     private final WaarpSslContextFactory waarpSslContextFactory;
-    private final ExecutorService executor = Executors.newCachedThreadPool();
 
     public LocalExecSslClientPipelineFactory(WaarpSslContextFactory waarpSslContextFactory) {
         this.waarpSslContextFactory = waarpSslContextFactory;
@@ -56,7 +52,7 @@ public class LocalExecSslClientPipelineFactory extends LocalExecClientPipelineFa
 
         // Add SSL as first element in the pipeline
         SslHandler sslhandler = waarpSslContextFactory.initPipelineFactory(false,
-                waarpSslContextFactory.needClientAuthentication(), false, executor);
+                waarpSslContextFactory.needClientAuthentication(), false);
         sslhandler.setIssueHandshake(true);
         pipeline.addLast("ssl", sslhandler);
         // Add the text line codec combination first,
@@ -76,7 +72,6 @@ public class LocalExecSslClientPipelineFactory extends LocalExecClientPipelineFa
      */
     public void releaseResources() {
         super.releaseResources();
-        this.executor.shutdownNow();
     }
 
 }

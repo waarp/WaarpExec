@@ -260,7 +260,10 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                         try {
                             status = defaultExecutor.execute(commandLine);
                         } catch (ExecuteException e1) {
-                            pumpStreamHandler.stop();
+                            try {
+								pumpStreamHandler.stop();
+							} catch (IOException e3) {
+							}
                             logger.error("Exception: " + e.getMessage() +
                                     " Exec in error with " + commandLine.toString());
                             response = LocalExecDefaultResult.BadExecution.status+" "+
@@ -271,7 +274,10 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                             }
                             return;
                         } catch (IOException e1) {
-                            pumpStreamHandler.stop();
+                            try {
+								pumpStreamHandler.stop();
+							} catch (IOException e3) {
+							}
                             logger.error("Exception: " + e.getMessage() +
                                     " Exec in error with " + commandLine.toString());
                             response = LocalExecDefaultResult.BadExecution.status+" "+
@@ -283,7 +289,10 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                             return;
                         }
                     } else {
-                        pumpStreamHandler.stop();
+                        try {
+							pumpStreamHandler.stop();
+						} catch (IOException e3) {
+						}
                         logger.error("Exception: " + e.getMessage() +
                                 " Exec in error with " + commandLine.toString());
                         response = LocalExecDefaultResult.BadExecution.status+" "+
@@ -295,7 +304,10 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                         return;
                     }
                 } catch (IOException e) {
-                    pumpStreamHandler.stop();
+                    try {
+						pumpStreamHandler.stop();
+					} catch (IOException e3) {
+					}
                     logger.error("Exception: " + e.getMessage() +
                             " Exec in error with " + commandLine.toString());
                     response = LocalExecDefaultResult.BadExecution.status+" "+
@@ -306,7 +318,10 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                     }
                     return;
                 }
-                pumpStreamHandler.stop();
+                try {
+					pumpStreamHandler.stop();
+				} catch (IOException e3) {
+				}
                 if (defaultExecutor.isFailure(status) && watchdog != null &&
                         watchdog.killedProcess()) {
                     // kill by the watchdoc (time out)
