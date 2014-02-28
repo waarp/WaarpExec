@@ -24,6 +24,7 @@ package org.waarp.commandexec.server;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.channels.CancelledKeyException;
 import java.nio.channels.ClosedChannelException;
 import java.util.Map;
@@ -47,6 +48,7 @@ import org.waarp.commandexec.utils.LocalExecDefaultResult;
 import org.waarp.common.crypto.ssl.WaarpSslUtility;
 import org.waarp.common.logging.WaarpInternalLogger;
 import org.waarp.common.logging.WaarpInternalLoggerFactory;
+import org.waarp.common.utility.WaarpStringUtils;
 
 /**
  * Handles a server-side channel for LocalExec.
@@ -258,7 +260,10 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                         try {
                             status = defaultExecutor.execute(commandLine);
                         } catch (ExecuteException e1) {
-                            pumpStreamHandler.stop();
+                            try {
+								pumpStreamHandler.stop();
+							} catch (IOException e3) {
+							}
                             logger.error("Exception: " + e.getMessage() +
                                     " Exec in error with " + commandLine.toString());
                             response = LocalExecDefaultResult.BadExecution.status+" "+
@@ -269,7 +274,10 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                             }
                             return;
                         } catch (IOException e1) {
-                            pumpStreamHandler.stop();
+                            try {
+								pumpStreamHandler.stop();
+							} catch (IOException e3) {
+							}
                             logger.error("Exception: " + e.getMessage() +
                                     " Exec in error with " + commandLine.toString());
                             response = LocalExecDefaultResult.BadExecution.status+" "+
@@ -281,7 +289,10 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                             return;
                         }
                     } else {
-                        pumpStreamHandler.stop();
+                        try {
+							pumpStreamHandler.stop();
+						} catch (IOException e3) {
+						}
                         logger.error("Exception: " + e.getMessage() +
                                 " Exec in error with " + commandLine.toString());
                         response = LocalExecDefaultResult.BadExecution.status+" "+
@@ -293,7 +304,10 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                         return;
                     }
                 } catch (IOException e) {
-                    pumpStreamHandler.stop();
+                    try {
+						pumpStreamHandler.stop();
+					} catch (IOException e3) {
+					}
                     logger.error("Exception: " + e.getMessage() +
                             " Exec in error with " + commandLine.toString());
                     response = LocalExecDefaultResult.BadExecution.status+" "+
@@ -304,7 +318,10 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                     }
                     return;
                 }
-                pumpStreamHandler.stop();
+                try {
+					pumpStreamHandler.stop();
+				} catch (IOException e3) {
+				}
                 if (defaultExecutor.isFailure(status) && watchdog != null &&
                         watchdog.killedProcess()) {
                     // kill by the watchdoc (time out)
@@ -316,7 +333,11 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                     } catch (IOException e2) {
                     }
                 } else {
-                    response = status+" "+outputStream.toString();
+                    try {
+						response = status+" "+outputStream.toString(WaarpStringUtils.UTF8.name());
+					} catch (UnsupportedEncodingException e) {
+						response = status+" "+outputStream.toString();
+					}
                     try {
                         outputStream.close();
                     } catch (IOException e2) {
