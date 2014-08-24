@@ -20,16 +20,19 @@
  */
 package org.waarp.commandexec.client;
 
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.Channels;
-import org.jboss.netty.channel.group.ChannelGroup;
-import org.jboss.netty.channel.group.DefaultChannelGroup;
-import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
-import org.jboss.netty.handler.codec.frame.Delimiters;
-import org.jboss.netty.handler.codec.string.StringDecoder;
-import org.jboss.netty.handler.codec.string.StringEncoder;
+import org.waarp.common.utility.WaarpStringUtils;
+
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
+import io.netty.handler.codec.Delimiters;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
+import io.netty.util.concurrent.DefaultEventExecutor;
 
 /**
  * Creates a newly configured {@link ChannelPipeline} for a new channel for LocalExecClientTest.
@@ -37,29 +40,28 @@ import org.jboss.netty.handler.codec.string.StringEncoder;
  *
  *
  */
-public class LocalExecClientPipelineFactory implements ChannelPipelineFactory {
+public class LocalExecClientInitializer extends ChannelInitializer<SocketChannel> {
 
     private final ChannelGroup channelGroup;
 
-    public LocalExecClientPipelineFactory() {
-        channelGroup = new DefaultChannelGroup("LocalExecClient");
+    public LocalExecClientInitializer() {
+        channelGroup = new DefaultChannelGroup("LocalExecClient", new DefaultEventExecutor());
     }
 
-    public ChannelPipeline getPipeline() throws Exception {
+    @Override
+    protected void initChannel(SocketChannel ch) throws Exception {
         // Create a default pipeline implementation.
-        ChannelPipeline pipeline = Channels.pipeline();
+        ChannelPipeline pipeline = ch.pipeline();
 
         // Add the text line codec combination first,
         pipeline.addLast("framer", new DelimiterBasedFrameDecoder(8192,
                 Delimiters.lineDelimiter()));
-        pipeline.addLast("decoder", new StringDecoder());
-        pipeline.addLast("encoder", new StringEncoder());
+        pipeline.addLast("decoder", new StringDecoder(WaarpStringUtils.UTF8));
+        pipeline.addLast("encoder", new StringEncoder(WaarpStringUtils.UTF8));
 
         // and then business logic.
         LocalExecClientHandler localExecClientHandler = new LocalExecClientHandler(this);
         pipeline.addLast("handler", localExecClientHandler);
-
-        return pipeline;
     }
     /**
      * Add a channel to the ExecClient Group

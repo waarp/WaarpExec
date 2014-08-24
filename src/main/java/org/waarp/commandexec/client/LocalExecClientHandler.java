@@ -21,30 +21,28 @@
 package org.waarp.commandexec.client;
 
 
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
+
 import org.waarp.commandexec.utils.LocalExecDefaultResult;
 import org.waarp.commandexec.utils.LocalExecResult;
 import org.waarp.common.crypto.ssl.WaarpSslUtility;
 import org.waarp.common.future.WaarpFuture;
-import org.waarp.common.logging.WaarpInternalLogger;
-import org.waarp.common.logging.WaarpInternalLoggerFactory;
+import org.waarp.common.logging.WaarpLogger;
+import org.waarp.common.logging.WaarpLoggerFactory;
 
 /**
  * Handles a client-side channel for LocalExec
  *
  *
  */
-public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
+public class LocalExecClientHandler extends SimpleChannelInboundHandler<String> {
 
     /**
      * Internal Logger
      */
-    private static final WaarpInternalLogger logger = WaarpInternalLoggerFactory
+    private static final WaarpLogger logger = WaarpLoggerFactory
             .getLogger(LocalExecClientHandler.class);
 
 
@@ -52,7 +50,7 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
     protected StringBuilder back;
     protected boolean firstMessage = true;
     protected WaarpFuture future;
-    protected LocalExecClientPipelineFactory factory = null;
+    protected LocalExecClientInitializer factory = null;
     protected long delay;
     protected String command;
     protected Channel channel;
@@ -60,7 +58,7 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
     /**
      * Constructor
      */
-    public LocalExecClientHandler(LocalExecClientPipelineFactory factory) {
+    public LocalExecClientHandler(LocalExecClientInitializer factory) {
         this.factory = factory;
     }
 
@@ -86,23 +84,20 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
         logger.debug("write command: "+this.command);
         try {
 	        if (this.delay != 0) {
-	        	channel.write(this.delay+" "+this.command+"\n").await();
+	        	channel.writeAndFlush(this.delay+" "+this.command+"\n").await();
 	        } else {
-	        	channel.write(this.command+"\n").await();
+	        	channel.writeAndFlush(this.command+"\n").await();
 	        }
         } catch (InterruptedException e) {
         }
     }
 
-    /* (non-Javadoc)
-     * @see org.jboss.netty.channel.SimpleChannelUpstreamHandler#channelConnected(org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.ChannelStateEvent)
-     */
     @Override
-    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e)
-            throws Exception {
-    	channel = ctx.getChannel();
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        channel = ctx.channel();
         factory.addChannel(channel);
         ready.setSuccess();
+        super.channelActive(ctx);
     }
 
     /**
@@ -112,21 +107,27 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
      * Else if no error occurs => Set success to the future<br>
      *
      *
-     * @see org.jboss.netty.channel.SimpleChannelUpstreamHandler#channelClosed(org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.ChannelStateEvent)
+     * @see io.netty.channel.SimpleChannelInboundHandler#channelClosed(io.netty.channel.ChannelHandlerContext, io.netty.channel.ChannelStateEvent)
      */
     @Override
-    public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e)
-            throws Exception {
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         if (future == null || !future.isDone()) {
             // Should not be
             finalizeMessage();
         }
-        super.channelClosed(ctx, e);
+        super.channelInactive(ctx);
     }
+
     /**
      * Finalize a message
      */
     private void finalizeMessage() {
+        if (result == null) {
+            if (this.future != null) {
+                this.future.cancel();
+            }
+            return;
+        }
         if (firstMessage) {
             result.set(LocalExecDefaultResult.NoMessage);
         } else {
@@ -164,9 +165,8 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
+    protected void channelRead0(ChannelHandlerContext ctx, String mesg) throws Exception {
         // Add the line received from the server.
-        String mesg = (String) e.getMessage();
         // If first message, then take the status and then the message
         if (firstMessage) {
             firstMessage = false;
@@ -178,8 +178,8 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
             	logger.debug(this.command+":"+"Bad Transmission: "+mesg+"\n\t"+back.toString());
                 result.set(LocalExecDefaultResult.BadTransmition);
                 back.append(mesg);
-                actionBeforeClose(e.getChannel());
-                WaarpSslUtility.closingSslChannel(ctx.getChannel());
+                actionBeforeClose(ctx.channel());
+                WaarpSslUtility.closingSslChannel(ctx.channel());
                 return;
             }
             mesg = mesg.substring(pos+1);
@@ -202,23 +202,23 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-        logger.warn(this.command+":"+"Unexpected exception from downstream while get information: "+firstMessage,
-                e.getCause());
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        logger.warn(this.command+":"+"Unexpected exception from Outband while get information: "+firstMessage,
+                cause);
         if (firstMessage) {
             firstMessage = false;
             result.set(LocalExecDefaultResult.BadTransmition);
-            result.exception = (Exception) e.getCause();
+            result.exception = (Exception) cause;
             back = new StringBuilder("Error in LocalExec: ");
             back.append(result.exception.getMessage());
             back.append('\n');
         } else {
             back.append("\nERROR while receiving answer: ");
-            result.exception = (Exception) e.getCause();
+            result.exception = (Exception) cause;
             back.append(result.exception.getMessage());
             back.append('\n');
         }
-        actionBeforeClose(e.getChannel());
-        WaarpSslUtility.closingSslChannel(e.getChannel());
+        actionBeforeClose(ctx.channel());
+        WaarpSslUtility.closingSslChannel(ctx.channel());
     }
 }

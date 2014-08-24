@@ -20,17 +20,16 @@
  */
 package org.waarp.commandexec.ssl.server;
 
-import static org.jboss.netty.channel.Channels.pipeline;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
+import io.netty.handler.codec.Delimiters;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
+import io.netty.handler.ssl.SslHandler;
+import io.netty.util.concurrent.EventExecutorGroup;
 
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
-import org.jboss.netty.handler.codec.frame.Delimiters;
-import org.jboss.netty.handler.codec.string.StringDecoder;
-import org.jboss.netty.handler.codec.string.StringEncoder;
-import org.jboss.netty.handler.execution.ExecutionHandler;
-import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
-import org.jboss.netty.handler.ssl.SslHandler;
-import org.waarp.commandexec.server.LocalExecServerPipelineFactory;
+import org.waarp.commandexec.server.LocalExecServerInitializer;
 import org.waarp.commandexec.utils.LocalExecDefaultResult;
 import org.waarp.common.crypto.ssl.WaarpSslContextFactory;
 
@@ -41,7 +40,7 @@ import org.waarp.common.crypto.ssl.WaarpSslContextFactory;
  * @author Frederic Bregier
  *
  */
-public class LocalExecSslServerPipelineFactory extends LocalExecServerPipelineFactory {
+public class LocalExecSslServerInitializer extends LocalExecServerInitializer {
 
     private final WaarpSslContextFactory waarpSslContextFactory;
     
@@ -52,10 +51,10 @@ public class LocalExecSslServerPipelineFactory extends LocalExecServerPipelineFa
      * @param waarpSslContextFactory
      * @param omatpe
      */
-    public LocalExecSslServerPipelineFactory(WaarpSslContextFactory waarpSslContextFactory,
-    		OrderedMemoryAwareThreadPoolExecutor omatpe) {
+    public LocalExecSslServerInitializer(WaarpSslContextFactory waarpSslContextFactory,
+            EventExecutorGroup eventExecutorGroup) {
         // Default delay
-    	super(omatpe);
+    	super(eventExecutorGroup);
         this.waarpSslContextFactory = waarpSslContextFactory;
     }
 
@@ -64,34 +63,31 @@ public class LocalExecSslServerPipelineFactory extends LocalExecServerPipelineFa
      * @param waarpSslContextFactory
      * @param newdelay
      */
-    public LocalExecSslServerPipelineFactory(WaarpSslContextFactory waarpSslContextFactory, 
-    		long newdelay, OrderedMemoryAwareThreadPoolExecutor omatpe) {
-    	super(omatpe);
+    public LocalExecSslServerInitializer(WaarpSslContextFactory waarpSslContextFactory, 
+    		long newdelay, EventExecutorGroup eventExecutorGroup) {
+    	super(eventExecutorGroup);
         delay = newdelay;
         this.waarpSslContextFactory = waarpSslContextFactory;
     }
 
-    public ChannelPipeline getPipeline() throws Exception {
+    @Override
+    public void initChannel(SocketChannel ch) throws Exception {
         // Create a default pipeline implementation.
-        ChannelPipeline pipeline = pipeline();
+        ChannelPipeline pipeline = ch.pipeline();
 
         // Add SSL as first element in the pipeline
-        SslHandler sslhandler = waarpSslContextFactory.initPipelineFactory(true,
-                waarpSslContextFactory.needClientAuthentication(), false);
-        sslhandler.setIssueHandshake(true);
+        SslHandler sslhandler = waarpSslContextFactory.initInitializer(true,
+                waarpSslContextFactory.needClientAuthentication());
         pipeline.addLast("ssl", sslhandler);
         // Add the text line codec combination first,
         pipeline.addLast("framer", new DelimiterBasedFrameDecoder(8192,
                 Delimiters.lineDelimiter()));
-        pipeline.addLast("pipelineExecutor", new ExecutionHandler(omatpe));
-        pipeline.addLast("decoder", new StringDecoder());
-        pipeline.addLast("encoder", new StringEncoder());
+        pipeline.addLast(eventExecutorGroup, "decoder", new StringDecoder());
+        pipeline.addLast(eventExecutorGroup, "encoder", new StringEncoder());
 
         // and then business logic.
         // Could change it with a new fixed delay if necessary at construction
-        pipeline.addLast("handler", new LocalExecSslServerHandler(this, delay));
-
-        return pipeline;
+        pipeline.addLast(eventExecutorGroup, "handler", new LocalExecSslServerHandler(this, delay));
     }
 
     /**

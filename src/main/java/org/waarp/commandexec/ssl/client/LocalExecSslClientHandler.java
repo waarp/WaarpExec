@@ -22,16 +22,14 @@ package org.waarp.commandexec.ssl.client;
 
 import javax.net.ssl.SSLException;
 
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.ExceptionEvent;
+import io.netty.channel.ChannelHandlerContext;
+
 import org.waarp.commandexec.client.LocalExecClientHandler;
-import org.waarp.commandexec.client.LocalExecClientPipelineFactory;
+import org.waarp.commandexec.client.LocalExecClientInitializer;
 import org.waarp.commandexec.utils.LocalExecDefaultResult;
 import org.waarp.common.crypto.ssl.WaarpSslUtility;
-import org.waarp.common.logging.WaarpInternalLogger;
-import org.waarp.common.logging.WaarpInternalLoggerFactory;
+import org.waarp.common.logging.WaarpLogger;
+import org.waarp.common.logging.WaarpLoggerFactory;
 
 
 /**
@@ -42,57 +40,44 @@ public class LocalExecSslClientHandler extends LocalExecClientHandler {
     /**
      * Internal Logger
      */
-    private static final WaarpInternalLogger logger = WaarpInternalLoggerFactory
+    private static final WaarpLogger logger = WaarpLoggerFactory
             .getLogger(LocalExecSslClientHandler.class);
     /**
      * @param factory
      */
-    public LocalExecSslClientHandler(LocalExecClientPipelineFactory factory) {
+    public LocalExecSslClientHandler(LocalExecClientInitializer factory) {
         super(factory);
     }
-    
-    @Override
-	public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-		WaarpSslUtility.addSslOpenedChannel(e.getChannel());
-		super.channelOpen(ctx, e);
-	}
 
-	/* (non-Javadoc)
-     * @see org.jboss.netty.channel.SimpleChannelUpstreamHandler#channelConnected(org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.ChannelStateEvent)
-     */
     @Override
-    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e)
-            throws Exception {
-    	WaarpSslUtility.setStatusSslConnectedChannel(e.getChannel(), true);
-        super.channelConnected(ctx, e);
+    public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
+        WaarpSslUtility.addSslOpenedChannel(ctx.channel());
+        super.channelRegistered(ctx);
     }
-    
-    @Override
-	public void actionBeforeClose(Channel channel) {
-	}
 
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-        logger.warn("Unexpected exception from downstream while get information: "+firstMessage,
-                e.getCause());
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        logger.warn("Unexpected exception from Outband while get information: "+firstMessage,
+                cause);
         if (firstMessage) {
             firstMessage = false;
             result.set(LocalExecDefaultResult.BadTransmition);
-            result.exception = (Exception) e.getCause();
+            result.exception = (Exception) cause;
             back = new StringBuilder("Error in LocalExec: ");
             back.append(result.exception.getMessage());
             back.append('\n');
         } else {
-        	if (e.getCause() instanceof SSLException) {
+        	if (cause instanceof SSLException) {
         		// ignore ?
-        		logger.warn("Ignore exception ?", e.getCause());
+        		logger.warn("Ignore exception ?", cause);
         		return;
         	}
             back.append("\nERROR while receiving answer: ");
-            result.exception = (Exception) e.getCause();
+            result.exception = (Exception) cause;
             back.append(result.exception.getMessage());
             back.append('\n');
         }
-        actionBeforeClose(e.getChannel());
-        WaarpSslUtility.closingSslChannel(e.getChannel());
+        actionBeforeClose(ctx.channel());
+        WaarpSslUtility.closingSslChannel(ctx.channel());
     }
 }

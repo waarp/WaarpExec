@@ -20,15 +20,17 @@
  */
 package org.waarp.commandexec.ssl.client;
 
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.Channels;
-import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
-import org.jboss.netty.handler.codec.frame.Delimiters;
-import org.jboss.netty.handler.codec.string.StringDecoder;
-import org.jboss.netty.handler.codec.string.StringEncoder;
-import org.jboss.netty.handler.ssl.SslHandler;
-import org.waarp.commandexec.client.LocalExecClientPipelineFactory;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
+import io.netty.handler.codec.Delimiters;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
+import io.netty.handler.ssl.SslHandler;
+
+import org.waarp.commandexec.client.LocalExecClientInitializer;
 import org.waarp.common.crypto.ssl.WaarpSslContextFactory;
+import org.waarp.common.utility.WaarpStringUtils;
 
 
 /**
@@ -38,35 +40,35 @@ import org.waarp.common.crypto.ssl.WaarpSslContextFactory;
  * @author Frederic Bregier
  *
  */
-public class LocalExecSslClientPipelineFactory extends LocalExecClientPipelineFactory {
+public class LocalExecSslClientInitializer extends LocalExecClientInitializer {
 
     private final WaarpSslContextFactory waarpSslContextFactory;
 
-    public LocalExecSslClientPipelineFactory(WaarpSslContextFactory waarpSslContextFactory) {
+    public LocalExecSslClientInitializer(WaarpSslContextFactory waarpSslContextFactory) {
         this.waarpSslContextFactory = waarpSslContextFactory;
     }
 
-    public ChannelPipeline getPipeline() throws Exception {
+    @Override
+    protected void initChannel(SocketChannel ch) throws Exception {
         // Create a default pipeline implementation.
-        ChannelPipeline pipeline = Channels.pipeline();
+        ChannelPipeline pipeline = ch.pipeline();
 
         // Add SSL as first element in the pipeline
-        SslHandler sslhandler = waarpSslContextFactory.initPipelineFactory(false,
-                waarpSslContextFactory.needClientAuthentication(), false);
-        sslhandler.setIssueHandshake(true);
+        SslHandler sslhandler = waarpSslContextFactory.initInitializer(false,
+                waarpSslContextFactory.needClientAuthentication());
+        //sslhandler.setIssueHandshake(true);
         pipeline.addLast("ssl", sslhandler);
         // Add the text line codec combination first,
         pipeline.addLast("framer", new DelimiterBasedFrameDecoder(8192,
                 Delimiters.lineDelimiter()));
-        pipeline.addLast("decoder", new StringDecoder());
-        pipeline.addLast("encoder", new StringEncoder());
+        pipeline.addLast("decoder", new StringDecoder(WaarpStringUtils.UTF8));
+        pipeline.addLast("encoder", new StringEncoder(WaarpStringUtils.UTF8));
 
         // and then business logic.
         LocalExecSslClientHandler localExecClientHandler = new LocalExecSslClientHandler(this);
         pipeline.addLast("handler", localExecClientHandler);
-
-        return pipeline;
     }
+
     /**
      * Release internal resources
      */

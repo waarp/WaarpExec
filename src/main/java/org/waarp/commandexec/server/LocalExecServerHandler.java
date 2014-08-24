@@ -38,16 +38,14 @@ import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.exec.PumpStreamHandler;
 
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
+
 import org.waarp.commandexec.utils.LocalExecDefaultResult;
 import org.waarp.common.crypto.ssl.WaarpSslUtility;
-import org.waarp.common.logging.WaarpInternalLogger;
-import org.waarp.common.logging.WaarpInternalLoggerFactory;
+import org.waarp.common.logging.WaarpLogger;
+import org.waarp.common.logging.WaarpLoggerFactory;
 import org.waarp.common.utility.WaarpStringUtils;
 
 /**
@@ -55,16 +53,16 @@ import org.waarp.common.utility.WaarpStringUtils;
  *
  *
  */
-public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
+public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> {
     // Fixed delay, but could change if necessary at construction
     private long delay = LocalExecDefaultResult.MAXWAITPROCESS;
-    protected LocalExecServerPipelineFactory factory = null;
+    protected LocalExecServerInitializer factory = null;
     static protected boolean isShutdown = false;
 
     /**
      * Internal Logger
      */
-    private static final WaarpInternalLogger logger = WaarpInternalLoggerFactory
+    private static final WaarpLogger logger = WaarpLoggerFactory
             .getLogger(LocalExecServerHandler.class);
 
     protected volatile boolean answered = false;
@@ -76,9 +74,9 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
      */
     public static boolean isShutdown(Channel channel) {
         if (isShutdown) {
-            channel.write(LocalExecDefaultResult.ConnectionRefused.status+" "+LocalExecDefaultResult.ConnectionRefused.result+"\n");
+            channel.writeAndFlush(LocalExecDefaultResult.ConnectionRefused.status+" "+LocalExecDefaultResult.ConnectionRefused.result+"\n");
             try {
-                channel.write(LocalExecDefaultResult.ENDOFCOMMAND+"\n").await();
+                channel.writeAndFlush(LocalExecDefaultResult.ENDOFCOMMAND+"\n").await();
             } catch (InterruptedException e) {
             }
             WaarpSslUtility.closingSslChannel(channel);
@@ -105,8 +103,8 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
      */
     private static class GGLEThreadShutdown extends Thread {
         long delay = 3000;
-        LocalExecServerPipelineFactory factory;
-        public GGLEThreadShutdown(LocalExecServerPipelineFactory factory) {
+        LocalExecServerInitializer factory;
+        public GGLEThreadShutdown(LocalExecServerInitializer factory) {
             this.factory = factory;
         }
         /* (non-Javadoc)
@@ -132,7 +130,7 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
         /**
          * Internal Logger
          */
-        private static final WaarpInternalLogger logger = WaarpInternalLoggerFactory
+        private static final WaarpLogger logger = WaarpLoggerFactory
                 .getLogger(GGLETimerTask.class);
         /*
          * (non-Javadoc)
@@ -154,23 +152,19 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
      * Constructor with a specific delay
      * @param newdelay
      */
-    public LocalExecServerHandler(LocalExecServerPipelineFactory factory, long newdelay) {
+    public LocalExecServerHandler(LocalExecServerInitializer factory, long newdelay) {
         this.factory = factory;
         delay = newdelay;
     }
-
-    /* (non-Javadoc)
-     * @see org.jboss.netty.channel.SimpleChannelUpstreamHandler#channelConnected(org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.ChannelStateEvent)
-     */
+    
     @Override
-    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e)
-            throws Exception {
-        if (isShutdown(ctx.getChannel())) {
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        if (isShutdown(ctx.channel())) {
             answered = true;
             return;
         }
         answered = false;
-        factory.addChannel(ctx.getChannel());
+        factory.addChannel(ctx.channel());
     }
 
     /**
@@ -182,12 +176,9 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent evt) {
+    protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
         answered = false;
-        // Cast to a String first.
-        // We know it is a String because we put some codec in
-        // LocalExecPipelineFactory.
-        String request = (String) evt.getMessage();
+        String request = msg;
         
         // Generate and write a response.
         String response;
@@ -345,51 +336,51 @@ public class LocalExecServerHandler extends SimpleChannelUpstreamHandler {
                 }
             }
         } finally {
-            // We do not need to write a ChannelBuffer here.
-            // We know the encoder inserted at LocalExecPipelineFactory will do the
+            // We do not need to write a ByteBuf here.
+            // We know the encoder inserted at LocalExecInitializer will do the
             // conversion.
-            evt.getChannel().write(response+"\n");
+            ctx.channel().writeAndFlush(response+"\n");
             answered = true;
             if (watchdog != null) {
                 watchdog.stop();
             }
             logger.info("End of Command: "+request+" : "+response);
-            evt.getChannel().write(LocalExecDefaultResult.ENDOFCOMMAND+"\n");
+            ctx.channel().writeAndFlush(LocalExecDefaultResult.ENDOFCOMMAND+"\n");
         }
     }
 
+
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         if (!answered) {
-            logger.error("Unexpected exception from downstream while not answered.", e
-                .getCause());
+            logger.error("Unexpected exception from Outband while not answered.", cause);
         }
-        Throwable e1 = e.getCause();
+        Throwable e1 = cause;
         // Look if Nothing to do since execution will stop later on and
         // an error will occur on client side
         // since no message arrived before close (or partially)
         if (e1 instanceof CancelledKeyException) {
         } else if (e1 instanceof ClosedChannelException) {
         } else if (e1 instanceof NullPointerException) {
-            if (e.getChannel().isConnected()) {
+            if (ctx.channel().isActive()) {
                 if (answered) {
-                	logger.debug("Exception while answered: ",e.getCause());
+                	logger.debug("Exception while answered: ", cause);
                 }
-                WaarpSslUtility.closingSslChannel(e.getChannel());
+                WaarpSslUtility.closingSslChannel(ctx.channel());
             }
         } else if (e1 instanceof IOException) {
-            if (e.getChannel().isConnected()) {
+            if (ctx.channel().isActive()) {
                 if (answered) {
-                	logger.debug("Exception while answered: ",e.getCause());
+                	logger.debug("Exception while answered: ", cause);
                 }
-                WaarpSslUtility.closingSslChannel(e.getChannel());
+                WaarpSslUtility.closingSslChannel(ctx.channel());
             }
         } else if (e1 instanceof RejectedExecutionException) {
-            if (e.getChannel().isConnected()) {
+            if (ctx.channel().isActive()) {
                 if (answered) {
-                	logger.debug("Exception while answered: ",e.getCause());
+                	logger.debug("Exception while answered: ", cause);
                 }
-                WaarpSslUtility.closingSslChannel(e.getChannel());
+                WaarpSslUtility.closingSslChannel(ctx.channel());
             }
         }
     }

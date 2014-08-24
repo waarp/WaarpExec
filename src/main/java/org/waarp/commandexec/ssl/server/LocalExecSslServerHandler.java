@@ -21,7 +21,7 @@
 package org.waarp.commandexec.ssl.server;
 
 import org.waarp.commandexec.server.LocalExecServerHandler;
-import org.waarp.commandexec.server.LocalExecServerPipelineFactory;
+import org.waarp.commandexec.server.LocalExecServerInitializer;
 
 
 /**
@@ -34,7 +34,7 @@ public class LocalExecSslServerHandler extends LocalExecServerHandler {
      * @param factory
      * @param newdelay
      */
-    public LocalExecSslServerHandler(LocalExecServerPipelineFactory factory,
+    public LocalExecSslServerHandler(LocalExecServerInitializer factory,
             long newdelay) {
         super(factory, newdelay);
     }

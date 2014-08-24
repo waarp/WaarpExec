@@ -23,18 +23,20 @@ package org.waarp.commandexec.ssl.server;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
-import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
-import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
-import org.jboss.netty.logging.InternalLoggerFactory;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import io.netty.util.concurrent.EventExecutorGroup;
+
 import org.waarp.commandexec.utils.LocalExecDefaultResult;
 import org.waarp.common.crypto.ssl.WaarpSecureKeyStore;
 import org.waarp.common.crypto.ssl.WaarpSslContextFactory;
+import org.waarp.common.logging.WaarpLoggerFactory;
 import org.waarp.common.logging.WaarpSlf4JLoggerFactory;
+import org.waarp.common.utility.DetectionUtils;
+import org.waarp.common.utility.WaarpNettyUtil;
 import org.waarp.common.utility.WaarpThreadFactory;
 
 /**
@@ -43,12 +45,9 @@ import org.waarp.common.utility.WaarpThreadFactory;
  */
 public class LocalExecSslServer {
 
-    static ExecutorService threadPool;
-    static ExecutorService threadPool2;
-    static OrderedMemoryAwareThreadPoolExecutor pipelineExecutor = 
-    		new OrderedMemoryAwareThreadPoolExecutor(
-			1000, 0, 0, 200, TimeUnit.MILLISECONDS,
-			new WaarpThreadFactory("CommandExecutor"));
+    static EventLoopGroup bossGroup = new NioEventLoopGroup();
+    static EventLoopGroup workerGroup = new NioEventLoopGroup();
+    static EventExecutorGroup executor = new DefaultEventExecutorGroup(DetectionUtils.numberThreads(), new WaarpThreadFactory("LocalExecServer"));
 
     /**
      * Takes 3 to 8 arguments (last 5 are optional arguments):<br>
@@ -63,7 +62,7 @@ public class LocalExecSslServer {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        InternalLoggerFactory.setDefaultFactory(new WaarpSlf4JLoggerFactory(null));
+        WaarpLoggerFactory.setDefaultFactory(new WaarpSlf4JLoggerFactory(null));
         int port = 9999;
         InetAddress addr;
         long delay = LocalExecDefaultResult.MAXWAITPROCESS;
@@ -92,11 +91,10 @@ public class LocalExecSslServer {
             System.err.println("Need at least 3 arguments: Filename KeyStorePswd KeyPswd");
             return;
         }
-        threadPool = Executors.newCachedThreadPool();
-        threadPool2 = Executors.newCachedThreadPool();
         // Configure the server.
-        ServerBootstrap bootstrap = new ServerBootstrap(
-                new NioServerSocketChannelFactory(threadPool, threadPool2));
+        ServerBootstrap bootstrap = new ServerBootstrap();
+        WaarpNettyUtil.setServerBootstrap(bootstrap, bossGroup, workerGroup, 30000);
+        
         // Load the KeyStore (No certificates)
         WaarpSecureKeyStore WaarpSecureKeyStore =
             new WaarpSecureKeyStore(keyStoreFilename, keyStorePasswd, keyPassword);
@@ -109,8 +107,7 @@ public class LocalExecSslServer {
         WaarpSslContextFactory waarpSslContextFactory =
             new WaarpSslContextFactory(WaarpSecureKeyStore, true);
         // Configure the pipeline factory.
-        bootstrap.setPipelineFactory(
-                new LocalExecSslServerPipelineFactory(waarpSslContextFactory, delay, pipelineExecutor));
+        bootstrap.childHandler(new LocalExecSslServerInitializer(waarpSslContextFactory, delay, executor));
 
         // Bind and start to accept incoming connections only on local address.
         bootstrap.bind(new InetSocketAddress(addr, port));

@@ -29,20 +29,26 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
-import org.jboss.netty.logging.InternalLoggerFactory;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import io.netty.util.concurrent.EventExecutorGroup;
+
 import org.waarp.commandexec.ssl.client.LocalExecSslClientHandler;
-import org.waarp.commandexec.ssl.client.LocalExecSslClientPipelineFactory;
+import org.waarp.commandexec.ssl.client.LocalExecSslClientInitializer;
 import org.waarp.commandexec.utils.LocalExecResult;
 import org.waarp.common.crypto.ssl.WaarpSecureKeyStore;
 import org.waarp.common.crypto.ssl.WaarpSslContextFactory;
 import org.waarp.common.crypto.ssl.WaarpSslUtility;
+import org.waarp.common.logging.WaarpLogLevel;
+import org.waarp.common.logging.WaarpLoggerFactory;
 import org.waarp.common.logging.WaarpSlf4JLoggerFactory;
-
-import ch.qos.logback.classic.Level;
+import org.waarp.common.utility.DetectionUtils;
+import org.waarp.common.utility.WaarpNettyUtil;
+import org.waarp.common.utility.WaarpThreadFactory;
 
 /**
  * LocalExecSsl client.
@@ -59,16 +65,16 @@ public class LocalExecSslClientTest extends Thread {
 
     static int nit = 50;
     static int nth = 10;
-    static String command = "J:\\GG\\testexec.bat";
+    static String command = "/opt/R66/testexec.sh";
     static int port = 9999;
     static InetSocketAddress address;
     // with client authentication
-    static String keyStoreFilename = "J:\\GG\\R66\\certs\\testclient2.jks";
+    static String keyStoreFilename = "/opt/R66/AllJarsWaarpR66-2.4.28-2/config/certs/testclient2.jks";
     // without client authentication
     // static String keyStoreFilename = null;
     static String keyStorePasswd = "testclient2";
     static String keyPasswd = "client2";
-    static String keyTrustStoreFilename = "J:\\GG\\R66\\certs\\testclient.jks";
+    static String keyTrustStoreFilename = "/opt/R66/AllJarsWaarpR66-2.4.28-2/config/certs/testclient.jks";
     static String keyTrustStorePasswd = "testclient";
     static LocalExecResult result;
 
@@ -76,12 +82,12 @@ public class LocalExecSslClientTest extends Thread {
     static int ko = 0;
     static AtomicInteger atomicInteger = new AtomicInteger();
 
-    static ExecutorService threadPool;
-    static ExecutorService threadPool2;
+    static EventLoopGroup workerGroup = new NioEventLoopGroup();
+    static EventExecutorGroup executor = new DefaultEventExecutorGroup(DetectionUtils.numberThreads(), new WaarpThreadFactory("LocalExecServer"));
     // Configure the client.
-    static ClientBootstrap bootstrap;
+    static Bootstrap bootstrap;
     // Configure the pipeline factory.
-    static LocalExecSslClientPipelineFactory localExecClientPipelineFactory;
+    static LocalExecSslClientInitializer localExecClientInitializer;
 
     /**
      * Test & example main
@@ -89,8 +95,8 @@ public class LocalExecSslClientTest extends Thread {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        InternalLoggerFactory.setDefaultFactory(new WaarpSlf4JLoggerFactory(
-                Level.WARN));
+        WaarpLoggerFactory.setDefaultFactory(new WaarpSlf4JLoggerFactory(
+                WaarpLogLevel.WARN));
         InetAddress addr;
         byte []loop = {127,0,0,1};
         try {
@@ -99,11 +105,9 @@ public class LocalExecSslClientTest extends Thread {
             return;
         }
         address = new InetSocketAddress(addr, port);
-        threadPool = Executors.newCachedThreadPool();
-        threadPool2 = Executors.newCachedThreadPool();
         // Configure the client.
-        bootstrap = new ClientBootstrap(
-                new NioClientSocketChannelFactory(threadPool, threadPool2));
+        bootstrap = new Bootstrap();
+        WaarpNettyUtil.setBootstrap(bootstrap, workerGroup, 30000);
         // Configure the pipeline factory.
         // First create the SSL part
         WaarpSecureKeyStore WaarpSecureKeyStore;
@@ -123,17 +127,19 @@ public class LocalExecSslClientTest extends Thread {
             WaarpSecureKeyStore.initEmptyTrustStore();
         }
         WaarpSslContextFactory waarpSslContextFactory = new WaarpSslContextFactory(WaarpSecureKeyStore, false);
-        localExecClientPipelineFactory =
-                new LocalExecSslClientPipelineFactory(waarpSslContextFactory);
-        bootstrap.setPipelineFactory(localExecClientPipelineFactory);
+        localExecClientInitializer =
+                new LocalExecSslClientInitializer(waarpSslContextFactory);
+        bootstrap.handler(localExecClientInitializer);
+
         try {
             // Parse options.
             LocalExecSslClientTest client = new LocalExecSslClientTest();
             // run once
             long first = System.currentTimeMillis();
-            client.connect();
-            client.runOnce();
-            client.disconnect();
+            if (client.connect()) {
+                client.runOnce();
+                client.disconnect();
+            }
             long second = System.currentTimeMillis();
             // print time for one exec
             System.err.println("1=Total time in ms: "+(second-first)+" or "+(1*1000/(second-first))+" exec/s");
@@ -144,9 +150,10 @@ public class LocalExecSslClientTest extends Thread {
             // Now run multiple within one thread
             first = System.currentTimeMillis();
             for (int i = 0; i < nit; i ++) {
-                client.connect();
-                client.runOnce();
-                client.disconnect();
+                if (client.connect()) {
+                    client.runOnce();
+                    client.disconnect();
+                }
             }
             second = System.currentTimeMillis();
             // print time for one exec
@@ -178,9 +185,10 @@ public class LocalExecSslClientTest extends Thread {
 
             // run once
             first = System.currentTimeMillis();
-            client.connect();
-            client.runFinal();
-            client.disconnect();
+            if (client.connect()) {
+                client.runFinal();
+                client.disconnect();
+            }
             second = System.currentTimeMillis();
             // print time for one exec
             System.err.println("1=Total time in ms: "+(second-first)+" or "+(1*1000/(second-first))+" exec/s");
@@ -189,8 +197,8 @@ public class LocalExecSslClientTest extends Thread {
             ko = 0;
         } finally {
             // Shut down all thread pools to exit.
-            bootstrap.releaseExternalResources();
-            localExecClientPipelineFactory.releaseResources();
+            workerGroup.shutdownGracefully();
+            localExecClientInitializer.releaseResources();
         }
     }
 
@@ -205,17 +213,18 @@ public class LocalExecSslClientTest extends Thread {
      * Run method for thread
      */
     public void run() {
-        connect();
-        for (int i = 0; i < nit; i ++) {
-            this.runOnce();
+        if (connect()) {
+            for (int i = 0; i < nit; i ++) {
+                this.runOnce();
+            }
+            disconnect();
         }
-        disconnect();
     }
 
     /**
      * Connect to the Server
      */
-    private void connect() {
+    private boolean connect() {
         // Start the connection attempt.
         ChannelFuture future = bootstrap.connect(address);
 
@@ -223,9 +232,12 @@ public class LocalExecSslClientTest extends Thread {
         channel = WaarpSslUtility.waitforChannelReady(future);
         if (channel == null) {
             System.err.println("Client Not Connected");
-            future.getCause().printStackTrace();
-            return;
+            if (future.cause() != null) {
+                future.cause().printStackTrace();
+            }
+            return false;
         }
+        return true;
     }
     /**
      * Disconnect from the server
@@ -240,7 +252,7 @@ public class LocalExecSslClientTest extends Thread {
     private void runOnce() {
         // Initialize the command context
         LocalExecSslClientHandler clientHandler =
-            (LocalExecSslClientHandler) channel.getPipeline().getLast();
+            (LocalExecSslClientHandler) channel.pipeline().last();
         // Command to execute
         String line = command+" "+atomicInteger.incrementAndGet();
         clientHandler.initExecClient(0, line);
@@ -262,7 +274,7 @@ public class LocalExecSslClientTest extends Thread {
     private void runFinal() {
         // Initialize the command context
         LocalExecSslClientHandler clientHandler =
-            (LocalExecSslClientHandler) channel.getPipeline().getLast();
+            (LocalExecSslClientHandler) channel.pipeline().last();
         // Command to execute
         clientHandler.initExecClient(-1000, "stop");
         // Wait for the end of the exec command
