@@ -34,8 +34,6 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.util.concurrent.DefaultEventExecutorGroup;
-import io.netty.util.concurrent.EventExecutorGroup;
 
 import org.waarp.commandexec.client.LocalExecClientHandler;
 import org.waarp.commandexec.client.LocalExecClientInitializer;
@@ -44,9 +42,7 @@ import org.waarp.common.crypto.ssl.WaarpSslUtility;
 import org.waarp.common.logging.WaarpLogLevel;
 import org.waarp.common.logging.WaarpLoggerFactory;
 import org.waarp.common.logging.WaarpSlf4JLoggerFactory;
-import org.waarp.common.utility.DetectionUtils;
 import org.waarp.common.utility.WaarpNettyUtil;
-import org.waarp.common.utility.WaarpThreadFactory;
 
 /**
  * LocalExec client.
@@ -70,7 +66,6 @@ public class LocalExecClientTest extends Thread {
     static AtomicInteger atomicInteger = new AtomicInteger();
 
     static EventLoopGroup workerGroup = new NioEventLoopGroup();
-    static EventExecutorGroup executor = new DefaultEventExecutorGroup(DetectionUtils.numberThreads(), new WaarpThreadFactory("LocalExecServer"));
     // Configure the client.
     static Bootstrap bootstrap;
     // Configure the pipeline factory.
@@ -197,7 +192,7 @@ public class LocalExecClientTest extends Thread {
 
         // Wait until the connection attempt succeeds or fails.
         try {
-            channel = future.await().channel();
+            channel = future.await().sync().channel();
         } catch (InterruptedException e) {
         }
         if (!future.isSuccess()) {
@@ -215,7 +210,7 @@ public class LocalExecClientTest extends Thread {
         // all I/O operations are asynchronous in Netty.
         try {
         	ChannelFuture closeFuture = WaarpSslUtility.closingSslChannel(channel);
-        	closeFuture.await();
+        	closeFuture.await(30000);
         } catch (InterruptedException e) {
         }
     }

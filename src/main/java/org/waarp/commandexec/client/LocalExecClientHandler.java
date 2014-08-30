@@ -84,9 +84,9 @@ public class LocalExecClientHandler extends SimpleChannelInboundHandler<String> 
         logger.debug("write command: "+this.command);
         try {
 	        if (this.delay != 0) {
-	        	channel.writeAndFlush(this.delay+" "+this.command+"\n").await();
+	        	channel.writeAndFlush(this.delay+" "+this.command+"\n").await(30000);
 	        } else {
-	        	channel.writeAndFlush(this.command+"\n").await();
+	        	channel.writeAndFlush(this.command+"\n").await(30000);
 	        }
         } catch (InterruptedException e) {
         }

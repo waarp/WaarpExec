@@ -76,7 +76,7 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
         if (isShutdown) {
             channel.writeAndFlush(LocalExecDefaultResult.ConnectionRefused.status+" "+LocalExecDefaultResult.ConnectionRefused.result+"\n");
             try {
-                channel.writeAndFlush(LocalExecDefaultResult.ENDOFCOMMAND+"\n").await();
+                channel.writeAndFlush(LocalExecDefaultResult.ENDOFCOMMAND+"\n").await(30000);
             } catch (InterruptedException e) {
             }
             WaarpSslUtility.closingSslChannel(channel);
