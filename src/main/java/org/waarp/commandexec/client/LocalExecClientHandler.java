@@ -20,7 +20,6 @@
  */
 package org.waarp.commandexec.client;
 
-
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
@@ -36,8 +35,8 @@ import org.waarp.common.logging.WaarpInternalLoggerFactory;
 
 /**
  * Handles a client-side channel for LocalExec
- *
- *
+ * 
+ * 
  */
 public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
 
@@ -46,7 +45,6 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
      */
     private static final WaarpInternalLogger logger = WaarpInternalLoggerFactory
             .getLogger(LocalExecClientHandler.class);
-
 
     protected LocalExecResult result;
     protected StringBuilder back;
@@ -57,6 +55,7 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
     protected String command;
     protected Channel channel;
     protected WaarpFuture ready = new WaarpFuture(true);
+
     /**
      * Constructor
      */
@@ -66,6 +65,7 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
 
     /**
      * Initialize the client status for a new execution
+     * 
      * @param delay
      * @param command
      */
@@ -78,20 +78,18 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
         this.command = command;
         // Sends the received line to the server.
         if (channel == null) {
-        	try {
-				ready.await();
-			} catch (InterruptedException e) {
-			}
+            try {
+                ready.await();
+            } catch (InterruptedException e) {}
         }
-        logger.debug("write command: "+this.command);
+        logger.debug("write command: " + this.command);
         try {
-	        if (this.delay != 0) {
-	        	channel.write(this.delay+" "+this.command+"\n").await();
-	        } else {
-	        	channel.write(this.command+"\n").await();
-	        }
-        } catch (InterruptedException e) {
-        }
+            if (this.delay != 0) {
+                channel.write(this.delay + " " + this.command + "\n").await();
+            } else {
+                channel.write(this.command + "\n").await();
+            }
+        } catch (InterruptedException e) {}
     }
 
     /* (non-Javadoc)
@@ -100,7 +98,7 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e)
             throws Exception {
-    	channel = ctx.getChannel();
+        channel = ctx.getChannel();
         factory.addChannel(channel);
         ready.setSuccess();
     }
@@ -110,9 +108,10 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
      * If no messaged were received => NoMessage error is set to future<br>
      * Else if an error was detected => Set the future to error (with or without exception)<br>
      * Else if no error occurs => Set success to the future<br>
-     *
-     *
-     * @see org.jboss.netty.channel.SimpleChannelUpstreamHandler#channelClosed(org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.ChannelStateEvent)
+     * 
+     * 
+     * @see org.jboss.netty.channel.SimpleChannelUpstreamHandler#channelClosed(org.jboss.netty.channel.ChannelHandlerContext,
+     *      org.jboss.netty.channel.ChannelStateEvent)
      */
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e)
@@ -123,6 +122,7 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
         }
         super.channelClosed(ctx, e);
     }
+
     /**
      * Finalize a message
      */
@@ -142,8 +142,10 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
             this.future.setSuccess();
         }
     }
+
     /**
      * Waiting for the close of the exec
+     * 
      * @return The LocalExecResult
      */
     public LocalExecResult waitFor(long delay) {
@@ -155,12 +157,12 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
         result.isSuccess = this.future.isSuccess();
         return result;
     }
-    
+
     /**
      * Action to do before close
      */
     public void actionBeforeClose(Channel channel) {
-    	// here nothing to do
+        // here nothing to do
     }
 
     @Override
@@ -175,25 +177,25 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
                 result.status = Integer.parseInt(mesg.substring(0, pos));
             } catch (NumberFormatException e1) {
                 // Error
-            	logger.debug(this.command+":"+"Bad Transmission: "+mesg+"\n\t"+back.toString());
+                logger.debug(this.command + ":" + "Bad Transmission: " + mesg + "\n\t" + back.toString());
                 result.set(LocalExecDefaultResult.BadTransmition);
                 back.append(mesg);
                 actionBeforeClose(e.getChannel());
                 WaarpSslUtility.closingSslChannel(ctx.getChannel());
                 return;
             }
-            mesg = mesg.substring(pos+1);
+            mesg = mesg.substring(pos + 1);
             if (mesg.startsWith(LocalExecDefaultResult.ENDOFCOMMAND)) {
-                logger.debug(this.command+":"+"Receive End of Command");
+                logger.debug(this.command + ":" + "Receive End of Command");
                 result.result = LocalExecDefaultResult.NoMessage.result;
                 back.append(result.result);
                 this.finalizeMessage();
             } else {
-            	result.result = mesg;
-            	back.append(mesg);
+                result.result = mesg;
+                back.append(mesg);
             }
         } else if (mesg.startsWith(LocalExecDefaultResult.ENDOFCOMMAND)) {
-            logger.debug(this.command+":"+"Receive End of Command");
+            logger.debug(this.command + ":" + "Receive End of Command");
             this.finalizeMessage();
         } else {
             back.append('\n');
@@ -203,7 +205,7 @@ public class LocalExecClientHandler extends SimpleChannelUpstreamHandler {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-        logger.warn(this.command+":"+"Unexpected exception from downstream while get information: "+firstMessage,
+        logger.warn(this.command + ":" + "Unexpected exception from downstream while get information: " + firstMessage,
                 e.getCause());
         if (firstMessage) {
             firstMessage = false;

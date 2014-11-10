@@ -20,7 +20,6 @@
  */
 package org.waarp.commandexec.client.test;
 
-
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -44,9 +43,9 @@ import ch.qos.logback.classic.Level;
 
 /**
  * LocalExec client.
- *
+ * 
  * This class is an example of client.
- *
+ * 
  * On a bi-core Centrino2 vPro: 18/s in 50 sequential, 30/s in 10 threads with 50 sequential<br>
  * On a quad-core i7: 29/s in 50 sequential, 187/s in 10 threads with 50 sequential
  */
@@ -72,14 +71,16 @@ public class LocalExecClientTest extends Thread {
 
     /**
      * Test & example main
-     * @param args ignored
+     * 
+     * @param args
+     *            ignored
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
         InternalLoggerFactory.setDefaultFactory(new WaarpSlf4JLoggerFactory(
                 Level.WARN));
         InetAddress addr;
-        byte []loop = {127,0,0,1};
+        byte[] loop = { 127, 0, 0, 1 };
         try {
             addr = InetAddress.getByAddress(loop);
         } catch (UnknownHostException e) {
@@ -105,21 +106,23 @@ public class LocalExecClientTest extends Thread {
             client.disconnect();
             long second = System.currentTimeMillis();
             // print time for one exec
-            System.err.println("1=Total time in ms: "+(second-first)+" or "+(1*1000/(second-first))+" exec/s");
-            System.err.println("Result: " + ok+":"+ko);
+            System.err.println("1=Total time in ms: " + (second - first) + " or " + (1 * 1000 / (second - first))
+                    + " exec/s");
+            System.err.println("Result: " + ok + ":" + ko);
             ok = 0;
             ko = 0;
             // Now run multiple within one thread
             first = System.currentTimeMillis();
-            for (int i = 0; i < nit; i ++) {
+            for (int i = 0; i < nit; i++) {
                 client.connect();
                 client.runOnce();
                 client.disconnect();
             }
             second = System.currentTimeMillis();
             // print time for one exec
-            System.err.println(nit+"=Total time in ms: "+(second-first)+" or "+(nit*1000/(second-first))+" exec/s");
-            System.err.println("Result: " + ok+":"+ko);
+            System.err.println(nit + "=Total time in ms: " + (second - first) + " or "
+                    + (nit * 1000 / (second - first)) + " exec/s");
+            System.err.println("Result: " + ok + ":" + ko);
             ok = 0;
             ko = 0;
             // Now run multiple within multiple threads
@@ -127,19 +130,20 @@ public class LocalExecClientTest extends Thread {
             ExecutorService executorService = Executors.newFixedThreadPool(nth);
             first = System.currentTimeMillis();
             // Starts all thread with a default number of execution
-            for (int i = 0; i < nth; i ++) {
+            for (int i = 0; i < nth; i++) {
                 executorService.submit(new LocalExecClientTest());
             }
             Thread.sleep(500);
             executorService.shutdown();
-            while (! executorService.awaitTermination(200, TimeUnit.MILLISECONDS)) {
+            while (!executorService.awaitTermination(200, TimeUnit.MILLISECONDS)) {
                 Thread.sleep(50);
             }
             second = System.currentTimeMillis();
 
             // print time for one exec
-            System.err.println((nit*nth)+"=Total time in ms: "+(second-first)+" or "+(nit*nth*1000/(second-first))+" exec/s");
-            System.err.println("Result: " + ok+":"+ko);
+            System.err.println((nit * nth) + "=Total time in ms: " + (second - first) + " or "
+                    + (nit * nth * 1000 / (second - first)) + " exec/s");
+            System.err.println("Result: " + ok + ":" + ko);
             ok = 0;
             ko = 0;
 
@@ -150,8 +154,9 @@ public class LocalExecClientTest extends Thread {
             client.disconnect();
             second = System.currentTimeMillis();
             // print time for one exec
-            System.err.println("1=Total time in ms: "+(second-first)+" or "+(1*1000/(second-first))+" exec/s");
-            System.err.println("Result: " + ok+":"+ko);
+            System.err.println("1=Total time in ms: " + (second - first) + " or " + (1 * 1000 / (second - first))
+                    + " exec/s");
+            System.err.println("Result: " + ok + ":" + ko);
             ok = 0;
             ko = 0;
         } finally {
@@ -168,12 +173,13 @@ public class LocalExecClientTest extends Thread {
     }
 
     private Channel channel;
+
     /**
      * Run method for thread
      */
     public void run() {
         connect();
-        for (int i = 0; i < nit; i ++) {
+        for (int i = 0; i < nit; i++) {
             this.runOnce();
         }
         disconnect();
@@ -189,42 +195,41 @@ public class LocalExecClientTest extends Thread {
         // Wait until the connection attempt succeeds or fails.
         try {
             channel = future.await().getChannel();
-        } catch (InterruptedException e) {
-        }
+        } catch (InterruptedException e) {}
         if (!future.isSuccess()) {
             System.err.println("Client Not Connected");
             future.getCause().printStackTrace();
             return;
         }
     }
+
     /**
      * Disconnect from the server
      */
     private void disconnect() {
-    	// Close the connection. Make sure the close operation ends because
+        // Close the connection. Make sure the close operation ends because
         // all I/O operations are asynchronous in Netty.
         try {
-        	ChannelFuture closeFuture = WaarpSslUtility.closingSslChannel(channel);
-        	closeFuture.await();
-        } catch (InterruptedException e) {
-        }
+            ChannelFuture closeFuture = WaarpSslUtility.closingSslChannel(channel);
+            closeFuture.await();
+        } catch (InterruptedException e) {}
     }
 
     /**
      * Run method both for not threaded execution and threaded execution
      */
     public void runOnce() {
-     // Initialize the command context
+        // Initialize the command context
         LocalExecClientHandler clientHandler =
-            (LocalExecClientHandler) channel.getPipeline().getLast();
+                (LocalExecClientHandler) channel.getPipeline().getLast();
         // Command to execute
-        String line = command+" "+atomicInteger.incrementAndGet();
+        String line = command + " " + atomicInteger.incrementAndGet();
         clientHandler.initExecClient(0, line);
         // Wait for the end of the exec command
         LocalExecResult localExecResult = clientHandler.waitFor(10000);
         int status = localExecResult.status;
         if (status < 0) {
-            System.err.println(line+" Status: " + status + "\tResult: " +
+            System.err.println(line + " Status: " + status + "\tResult: " +
                     localExecResult.result);
             ko++;
         } else {
@@ -232,13 +237,14 @@ public class LocalExecClientTest extends Thread {
             result = localExecResult;
         }
     }
+
     /**
      * Run method for closing Server
      */
     private void runFinal() {
         // Initialize the command context
         LocalExecClientHandler clientHandler =
-            (LocalExecClientHandler) channel.getPipeline().getLast();
+                (LocalExecClientHandler) channel.getPipeline().getLast();
         // Command to execute
         clientHandler.initExecClient(-1000, "stop");
         // Wait for the end of the exec command

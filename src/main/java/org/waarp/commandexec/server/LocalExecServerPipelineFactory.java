@@ -37,8 +37,8 @@ import org.waarp.commandexec.utils.LocalExecDefaultResult;
 
 /**
  * Creates a newly configured {@link ChannelPipeline} for a new channel for LocalExecServer.
- *
- *
+ * 
+ * 
  */
 public class LocalExecServerPipelineFactory implements ChannelPipelineFactory {
 
@@ -57,14 +57,14 @@ public class LocalExecServerPipelineFactory implements ChannelPipelineFactory {
 
     /**
      * Constructor with a specific default delay
+     * 
      * @param newdelay
      */
     public LocalExecServerPipelineFactory(long newdelay,
-    		OrderedMemoryAwareThreadPoolExecutor omatpe) {
+            OrderedMemoryAwareThreadPoolExecutor omatpe) {
         delay = newdelay;
         this.omatpe = omatpe;
     }
-
 
     public ChannelPipeline getPipeline() throws Exception {
         // Create a default pipeline implementation.
@@ -83,8 +83,10 @@ public class LocalExecServerPipelineFactory implements ChannelPipelineFactory {
 
         return pipeline;
     }
+
     /**
      * Add a channel to the ExecClient Group
+     * 
      * @param channel
      */
     public void addChannel(Channel channel) {

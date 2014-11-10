@@ -20,7 +20,6 @@
  */
 package org.waarp.commandexec.ssl.server;
 
-
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutorService;
@@ -39,26 +38,27 @@ import org.waarp.common.utility.WaarpThreadFactory;
 
 /**
  * LocalExec server Main method.
- *
+ * 
  */
 public class LocalExecSslServer {
 
     static ExecutorService threadPool;
     static ExecutorService threadPool2;
-    static OrderedMemoryAwareThreadPoolExecutor pipelineExecutor = 
-    		new OrderedMemoryAwareThreadPoolExecutor(
-			1000, 0, 0, 200, TimeUnit.MILLISECONDS,
-			new WaarpThreadFactory("CommandExecutor"));
+    static OrderedMemoryAwareThreadPoolExecutor pipelineExecutor =
+            new OrderedMemoryAwareThreadPoolExecutor(
+                    1000, 0, 0, 200, TimeUnit.MILLISECONDS,
+                    new WaarpThreadFactory("CommandExecutor"));
 
     /**
      * Takes 3 to 8 arguments (last 5 are optional arguments):<br>
      * - mandatory arguments: filename keystorepaswwd keypassword<br>
      * - if no more arguments are provided, it implies 127.0.0.1 + 9999 as port and no certificates<br>
      * - optional arguments:<br>
-     *  "port"<br>
-     *  "port" "trustfilename" "trustpassword"<br>
-     *  "port" "trustfilename" "trustpassword" "addresse"<br>
-     *  "port" "trustfilename" "trustpassword" "addresse" "default delay"<br>
+     * "port"<br>
+     * "port" "trustfilename" "trustpassword"<br>
+     * "port" "trustfilename" "trustpassword" "addresse"<br>
+     * "port" "trustfilename" "trustpassword" "addresse" "default delay"<br>
+     * 
      * @param args
      * @throws Exception
      */
@@ -69,23 +69,23 @@ public class LocalExecSslServer {
         long delay = LocalExecDefaultResult.MAXWAITPROCESS;
         String keyStoreFilename, keyStorePasswd, keyPassword;
         String trustStoreFilename = null, trustStorePasswd = null;
-        byte []loop = {127,0,0,1};
+        byte[] loop = { 127, 0, 0, 1 };
         addr = InetAddress.getByAddress(loop);
-        if (args.length >=3) {
+        if (args.length >= 3) {
             keyStoreFilename = args[0];
             keyStorePasswd = args[1];
             keyPassword = args[2];
             if (args.length >= 4) {
                 port = Integer.parseInt(args[3]);
                 if (args.length >= 6) {
-	                trustStoreFilename = args[4];
-	                trustStorePasswd = args[5];
-	                if (args.length >= 7) {
-	                    addr = InetAddress.getByName(args[6]);
-	                    if (args.length > 7) {
-	                        delay = Long.parseLong(args[7]);
-	                    }
-	                }
+                    trustStoreFilename = args[4];
+                    trustStorePasswd = args[5];
+                    if (args.length >= 7) {
+                        addr = InetAddress.getByName(args[6]);
+                        if (args.length > 7) {
+                            delay = Long.parseLong(args[7]);
+                        }
+                    }
                 }
             }
         } else {
@@ -99,7 +99,7 @@ public class LocalExecSslServer {
                 new NioServerSocketChannelFactory(threadPool, threadPool2));
         // Load the KeyStore (No certificates)
         WaarpSecureKeyStore WaarpSecureKeyStore =
-            new WaarpSecureKeyStore(keyStoreFilename, keyStorePasswd, keyPassword);
+                new WaarpSecureKeyStore(keyStoreFilename, keyStorePasswd, keyPassword);
         if (trustStoreFilename != null) {
             // Include certificates
             WaarpSecureKeyStore.initTrustStore(trustStoreFilename, trustStorePasswd, true);
@@ -107,7 +107,7 @@ public class LocalExecSslServer {
             WaarpSecureKeyStore.initEmptyTrustStore();
         }
         WaarpSslContextFactory waarpSslContextFactory =
-            new WaarpSslContextFactory(WaarpSecureKeyStore, true);
+                new WaarpSslContextFactory(WaarpSecureKeyStore, true);
         // Configure the pipeline factory.
         bootstrap.setPipelineFactory(
                 new LocalExecSslServerPipelineFactory(waarpSslContextFactory, delay, pipelineExecutor));

@@ -20,7 +20,6 @@
  */
 package org.waarp.commandexec.ssl.client.test;
 
-
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -46,14 +45,18 @@ import ch.qos.logback.classic.Level;
 
 /**
  * LocalExecSsl client.
- *
+ * 
  * This class is an example of client.
- *
- * No client authentication On a bi-core Centrino2 vPro: 5/s in 50 sequential, 29/s in 10 threads with 50 sequential<br>
- * With client authentication On a bi-core Centrino2 vPro: 3/s in 50 sequential, 27/s in 10 threads with 50 sequential<br>
- * No client authentication On a quad-core i7: 20/s in 50 sequential, 178/s in 10 threads with 50 sequential<br>
- * With client authentication On a quad-core i7: 17/s in 50 sequential, 176/s in 10 threads with 50 sequential<br>
- *
+ * 
+ * No client authentication On a bi-core Centrino2 vPro: 5/s in 50 sequential, 29/s in 10 threads
+ * with 50 sequential<br>
+ * With client authentication On a bi-core Centrino2 vPro: 3/s in 50 sequential, 27/s in 10 threads
+ * with 50 sequential<br>
+ * No client authentication On a quad-core i7: 20/s in 50 sequential, 178/s in 10 threads with 50
+ * sequential<br>
+ * With client authentication On a quad-core i7: 17/s in 50 sequential, 176/s in 10 threads with 50
+ * sequential<br>
+ * 
  */
 public class LocalExecSslClientTest extends Thread {
 
@@ -85,14 +88,16 @@ public class LocalExecSslClientTest extends Thread {
 
     /**
      * Test & example main
-     * @param args ignored
+     * 
+     * @param args
+     *            ignored
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
         InternalLoggerFactory.setDefaultFactory(new WaarpSlf4JLoggerFactory(
                 Level.WARN));
         InetAddress addr;
-        byte []loop = {127,0,0,1};
+        byte[] loop = { 127, 0, 0, 1 };
         try {
             addr = InetAddress.getByAddress(loop);
         } catch (UnknownHostException e) {
@@ -110,10 +115,10 @@ public class LocalExecSslClientTest extends Thread {
         // For empty KeyStore
         if (keyStoreFilename == null) {
             WaarpSecureKeyStore =
-                new WaarpSecureKeyStore(keyStorePasswd, keyPasswd);
+                    new WaarpSecureKeyStore(keyStorePasswd, keyPasswd);
         } else {
             WaarpSecureKeyStore =
-                new WaarpSecureKeyStore(keyStoreFilename, keyStorePasswd, keyPasswd);
+                    new WaarpSecureKeyStore(keyStoreFilename, keyStorePasswd, keyPasswd);
         }
 
         if (keyTrustStoreFilename != null) {
@@ -136,22 +141,24 @@ public class LocalExecSslClientTest extends Thread {
             client.disconnect();
             long second = System.currentTimeMillis();
             // print time for one exec
-            System.err.println("1=Total time in ms: "+(second-first)+" or "+(1*1000/(second-first))+" exec/s");
-            System.err.println("Result: " + ok+":"+ko);
+            System.err.println("1=Total time in ms: " + (second - first) + " or " + (1 * 1000 / (second - first))
+                    + " exec/s");
+            System.err.println("Result: " + ok + ":" + ko);
             ok = 0;
             ko = 0;
 
             // Now run multiple within one thread
             first = System.currentTimeMillis();
-            for (int i = 0; i < nit; i ++) {
+            for (int i = 0; i < nit; i++) {
                 client.connect();
                 client.runOnce();
                 client.disconnect();
             }
             second = System.currentTimeMillis();
             // print time for one exec
-            System.err.println(nit+"=Total time in ms: "+(second-first)+" or "+(nit*1000/(second-first))+" exec/s");
-            System.err.println("Result: " + ok+":"+ko);
+            System.err.println(nit + "=Total time in ms: " + (second - first) + " or "
+                    + (nit * 1000 / (second - first)) + " exec/s");
+            System.err.println("Result: " + ok + ":" + ko);
             ok = 0;
             ko = 0;
 
@@ -160,19 +167,20 @@ public class LocalExecSslClientTest extends Thread {
             ExecutorService executorService = Executors.newFixedThreadPool(nth);
             first = System.currentTimeMillis();
             // Starts all thread with a default number of execution
-            for (int i = 0; i < nth; i ++) {
+            for (int i = 0; i < nth; i++) {
                 executorService.submit(new LocalExecSslClientTest());
             }
             Thread.sleep(500);
             executorService.shutdown();
-            while (! executorService.awaitTermination(200, TimeUnit.MILLISECONDS)) {
+            while (!executorService.awaitTermination(200, TimeUnit.MILLISECONDS)) {
                 Thread.sleep(50);
             }
             second = System.currentTimeMillis();
 
             // print time for one exec
-            System.err.println((nit*nth)+"=Total time in ms: "+(second-first)+" or "+(nit*nth*1000/(second-first))+" exec/s");
-            System.err.println("Result: " + ok+":"+ko);
+            System.err.println((nit * nth) + "=Total time in ms: " + (second - first) + " or "
+                    + (nit * nth * 1000 / (second - first)) + " exec/s");
+            System.err.println("Result: " + ok + ":" + ko);
             ok = 0;
             ko = 0;
 
@@ -183,8 +191,9 @@ public class LocalExecSslClientTest extends Thread {
             client.disconnect();
             second = System.currentTimeMillis();
             // print time for one exec
-            System.err.println("1=Total time in ms: "+(second-first)+" or "+(1*1000/(second-first))+" exec/s");
-            System.err.println("Result: " + ok+":"+ko);
+            System.err.println("1=Total time in ms: " + (second - first) + " or " + (1 * 1000 / (second - first))
+                    + " exec/s");
+            System.err.println("Result: " + ok + ":" + ko);
             ok = 0;
             ko = 0;
         } finally {
@@ -201,12 +210,13 @@ public class LocalExecSslClientTest extends Thread {
     }
 
     private Channel channel;
+
     /**
      * Run method for thread
      */
     public void run() {
         connect();
-        for (int i = 0; i < nit; i ++) {
+        for (int i = 0; i < nit; i++) {
             this.runOnce();
         }
         disconnect();
@@ -227,22 +237,24 @@ public class LocalExecSslClientTest extends Thread {
             return;
         }
     }
+
     /**
      * Disconnect from the server
      */
     private void disconnect() {
-    	WaarpSslUtility.closingSslChannel(channel);
-    	WaarpSslUtility.waitForClosingSslChannel(channel, 10000);
+        WaarpSslUtility.closingSslChannel(channel);
+        WaarpSslUtility.waitForClosingSslChannel(channel, 10000);
     }
+
     /**
      * Run method both for not threaded execution and threaded execution
      */
     private void runOnce() {
         // Initialize the command context
         LocalExecSslClientHandler clientHandler =
-            (LocalExecSslClientHandler) channel.getPipeline().getLast();
+                (LocalExecSslClientHandler) channel.getPipeline().getLast();
         // Command to execute
-        String line = command+" "+atomicInteger.incrementAndGet();
+        String line = command + " " + atomicInteger.incrementAndGet();
         clientHandler.initExecClient(0, line);
         // Wait for the end of the exec command
         LocalExecResult localExecResult = clientHandler.waitFor(10000);
@@ -256,13 +268,14 @@ public class LocalExecSslClientTest extends Thread {
             result = localExecResult;
         }
     }
+
     /**
      * Run method for closing Server
      */
     private void runFinal() {
         // Initialize the command context
         LocalExecSslClientHandler clientHandler =
-            (LocalExecSslClientHandler) channel.getPipeline().getLast();
+                (LocalExecSslClientHandler) channel.getPipeline().getLast();
         // Command to execute
         clientHandler.initExecClient(-1000, "stop");
         // Wait for the end of the exec command
