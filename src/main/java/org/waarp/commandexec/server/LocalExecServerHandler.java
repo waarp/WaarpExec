@@ -20,7 +20,6 @@
  */
 package org.waarp.commandexec.server;
 
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -69,14 +68,17 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
 
     /**
      * Is the Local Exec Server going Shutdown
-     * @param channel associated channel
+     * 
+     * @param channel
+     *            associated channel
      * @return True if in Shutdown
      */
     public static boolean isShutdown(Channel channel) {
         if (isShutdown) {
-            channel.writeAndFlush(LocalExecDefaultResult.ConnectionRefused.status+" "+LocalExecDefaultResult.ConnectionRefused.result+"\n");
+            channel.writeAndFlush(LocalExecDefaultResult.ConnectionRefused.status + " "
+                    + LocalExecDefaultResult.ConnectionRefused.result + "\n");
             try {
-                channel.writeAndFlush(LocalExecDefaultResult.ENDOFCOMMAND+"\n").await(30000);
+                channel.writeAndFlush(LocalExecDefaultResult.ENDOFCOMMAND + "\n").await(30000);
             } catch (InterruptedException e) {
             }
             WaarpSslUtility.closingSslChannel(channel);
@@ -84,29 +86,35 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
         }
         return false;
     }
+
     /**
      * Print stack trace
+     * 
      * @param thread
      * @param stacks
      */
     static private void printStackTrace(Thread thread, StackTraceElement[] stacks) {
         System.err.print(thread.toString() + " : ");
-        for (int i = 0; i < stacks.length-1; i++) {
-            System.err.print(stacks[i].toString()+" ");
+        for (int i = 0; i < stacks.length - 1; i++) {
+            System.err.print(stacks[i].toString() + " ");
         }
-        System.err.println(stacks[stacks.length-1].toString());
+        System.err.println(stacks[stacks.length - 1].toString());
     }
+
     /**
      * Shutdown thread
+     * 
      * @author Frederic Bregier
      *
      */
     private static class GGLEThreadShutdown extends Thread {
         long delay = 3000;
         LocalExecServerInitializer factory;
+
         public GGLEThreadShutdown(LocalExecServerInitializer factory) {
             this.factory = factory;
         }
+
         /* (non-Javadoc)
          * @see java.lang.Thread#run()
          */
@@ -121,8 +129,10 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
         }
 
     }
+
     /**
      * TimerTask to terminate the server
+     * 
      * @author Frederic Bregier
      *
      */
@@ -132,6 +142,7 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
          */
         private static final WaarpLogger logger = WaarpLoggerFactory
                 .getLogger(GGLETimerTask.class);
+
         /*
          * (non-Javadoc)
          *
@@ -142,21 +153,23 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
             logger.error("System will force EXIT");
             Map<Thread, StackTraceElement[]> map = Thread
                     .getAllStackTraces();
-            for (Thread thread: map.keySet()) {
+            for (Thread thread : map.keySet()) {
                 printStackTrace(thread, map.get(thread));
             }
             System.exit(0);
         }
     }
+
     /**
      * Constructor with a specific delay
+     * 
      * @param newdelay
      */
     public LocalExecServerHandler(LocalExecServerInitializer factory, long newdelay) {
         this.factory = factory;
         delay = newdelay;
     }
-    
+
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         if (isShutdown(ctx.channel())) {
@@ -169,6 +182,7 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
 
     /**
      * Change the delay to the specific value. Need to be called before any receive message.
+     * 
      * @param newdelay
      */
     public void setNewDelay(long newdelay) {
@@ -179,17 +193,17 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
     protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
         answered = false;
         String request = msg;
-        
+
         // Generate and write a response.
         String response;
-        response = LocalExecDefaultResult.NoStatus.status+" "+
-            LocalExecDefaultResult.NoStatus.result;
+        response = LocalExecDefaultResult.NoStatus.status + " " +
+                LocalExecDefaultResult.NoStatus.result;
         ExecuteWatchdog watchdog = null;
         try {
             if (request.length() == 0) {
                 // No command
-                response = LocalExecDefaultResult.NoCommand.status+" "+
-                    LocalExecDefaultResult.NoCommand.result;
+                response = LocalExecDefaultResult.NoCommand.status + " " +
+                        LocalExecDefaultResult.NoCommand.result;
             } else {
                 String[] args = request.split(" ");
                 int cpt = 0;
@@ -204,7 +218,8 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
                     // Shutdown Order
                     isShutdown = true;
                     logger.warn("Shutdown order received");
-                    response = LocalExecDefaultResult.ShutdownOnGoing.status+" "+LocalExecDefaultResult.ShutdownOnGoing.result;
+                    response = LocalExecDefaultResult.ShutdownOnGoing.status + " "
+                            + LocalExecDefaultResult.ShutdownOnGoing.result;
                     Thread thread = new GGLEThreadShutdown(factory);
                     thread.start();
                     return;
@@ -213,16 +228,16 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
                 File exec = new File(binary);
                 if (exec.isAbsolute()) {
                     // If true file, is it executable
-                    if (! exec.canExecute()) {
+                    if (!exec.canExecute()) {
                         logger.error("Exec command is not executable: " + request);
-                        response = LocalExecDefaultResult.NotExecutable.status+" "+
-                            LocalExecDefaultResult.NotExecutable.result;
+                        response = LocalExecDefaultResult.NotExecutable.status + " " +
+                                LocalExecDefaultResult.NotExecutable.result;
                         return;
                     }
                 }
                 // Create command with parameters
                 CommandLine commandLine = new CommandLine(binary);
-                for (; cpt < args.length; cpt ++) {
+                for (; cpt < args.length; cpt++) {
                     commandLine.addArgument(args[cpt]);
                 }
                 DefaultExecutor defaultExecutor = new DefaultExecutor();
@@ -252,13 +267,13 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
                             status = defaultExecutor.execute(commandLine);
                         } catch (ExecuteException e1) {
                             try {
-								pumpStreamHandler.stop();
-							} catch (IOException e3) {
-							}
+                                pumpStreamHandler.stop();
+                            } catch (IOException e3) {
+                            }
                             logger.error("Exception: " + e.getMessage() +
                                     " Exec in error with " + commandLine.toString());
-                            response = LocalExecDefaultResult.BadExecution.status+" "+
-                                LocalExecDefaultResult.BadExecution.result;
+                            response = LocalExecDefaultResult.BadExecution.status + " " +
+                                    LocalExecDefaultResult.BadExecution.result;
                             try {
                                 outputStream.close();
                             } catch (IOException e2) {
@@ -266,13 +281,13 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
                             return;
                         } catch (IOException e1) {
                             try {
-								pumpStreamHandler.stop();
-							} catch (IOException e3) {
-							}
+                                pumpStreamHandler.stop();
+                            } catch (IOException e3) {
+                            }
                             logger.error("Exception: " + e.getMessage() +
                                     " Exec in error with " + commandLine.toString());
-                            response = LocalExecDefaultResult.BadExecution.status+" "+
-                                LocalExecDefaultResult.BadExecution.result;
+                            response = LocalExecDefaultResult.BadExecution.status + " " +
+                                    LocalExecDefaultResult.BadExecution.result;
                             try {
                                 outputStream.close();
                             } catch (IOException e2) {
@@ -281,13 +296,13 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
                         }
                     } else {
                         try {
-							pumpStreamHandler.stop();
-						} catch (IOException e3) {
-						}
+                            pumpStreamHandler.stop();
+                        } catch (IOException e3) {
+                        }
                         logger.error("Exception: " + e.getMessage() +
                                 " Exec in error with " + commandLine.toString());
-                        response = LocalExecDefaultResult.BadExecution.status+" "+
-                            LocalExecDefaultResult.BadExecution.result;
+                        response = LocalExecDefaultResult.BadExecution.status + " " +
+                                LocalExecDefaultResult.BadExecution.result;
                         try {
                             outputStream.close();
                         } catch (IOException e2) {
@@ -296,13 +311,13 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
                     }
                 } catch (IOException e) {
                     try {
-						pumpStreamHandler.stop();
-					} catch (IOException e3) {
-					}
+                        pumpStreamHandler.stop();
+                    } catch (IOException e3) {
+                    }
                     logger.error("Exception: " + e.getMessage() +
                             " Exec in error with " + commandLine.toString());
-                    response = LocalExecDefaultResult.BadExecution.status+" "+
-                        LocalExecDefaultResult.BadExecution.result;
+                    response = LocalExecDefaultResult.BadExecution.status + " " +
+                            LocalExecDefaultResult.BadExecution.result;
                     try {
                         outputStream.close();
                     } catch (IOException e2) {
@@ -310,25 +325,25 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
                     return;
                 }
                 try {
-					pumpStreamHandler.stop();
-				} catch (IOException e3) {
-				}
+                    pumpStreamHandler.stop();
+                } catch (IOException e3) {
+                }
                 if (defaultExecutor.isFailure(status) && watchdog != null &&
                         watchdog.killedProcess()) {
                     // kill by the watchdoc (time out)
                     logger.error("Exec is in Time Out");
-                    response = LocalExecDefaultResult.TimeOutExecution.status+" "+
-                        LocalExecDefaultResult.TimeOutExecution.result;
+                    response = LocalExecDefaultResult.TimeOutExecution.status + " " +
+                            LocalExecDefaultResult.TimeOutExecution.result;
                     try {
                         outputStream.close();
                     } catch (IOException e2) {
                     }
                 } else {
                     try {
-						response = status+" "+outputStream.toString(WaarpStringUtils.UTF8.name());
-					} catch (UnsupportedEncodingException e) {
-						response = status+" "+outputStream.toString();
-					}
+                        response = status + " " + outputStream.toString(WaarpStringUtils.UTF8.name());
+                    } catch (UnsupportedEncodingException e) {
+                        response = status + " " + outputStream.toString();
+                    }
                     try {
                         outputStream.close();
                     } catch (IOException e2) {
@@ -339,16 +354,15 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
             // We do not need to write a ByteBuf here.
             // We know the encoder inserted at LocalExecInitializer will do the
             // conversion.
-            ctx.channel().writeAndFlush(response+"\n");
+            ctx.channel().writeAndFlush(response + "\n");
             answered = true;
             if (watchdog != null) {
                 watchdog.stop();
             }
-            logger.info("End of Command: "+request+" : "+response);
-            ctx.channel().writeAndFlush(LocalExecDefaultResult.ENDOFCOMMAND+"\n");
+            logger.info("End of Command: " + request + " : " + response);
+            ctx.channel().writeAndFlush(LocalExecDefaultResult.ENDOFCOMMAND + "\n");
         }
     }
-
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
@@ -364,21 +378,21 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
         } else if (e1 instanceof NullPointerException) {
             if (ctx.channel().isActive()) {
                 if (answered) {
-                	logger.debug("Exception while answered: ", cause);
+                    logger.debug("Exception while answered: ", cause);
                 }
                 WaarpSslUtility.closingSslChannel(ctx.channel());
             }
         } else if (e1 instanceof IOException) {
             if (ctx.channel().isActive()) {
                 if (answered) {
-                	logger.debug("Exception while answered: ", cause);
+                    logger.debug("Exception while answered: ", cause);
                 }
                 WaarpSslUtility.closingSslChannel(ctx.channel());
             }
         } else if (e1 instanceof RejectedExecutionException) {
             if (ctx.channel().isActive()) {
                 if (answered) {
-                	logger.debug("Exception while answered: ", cause);
+                    logger.debug("Exception while answered: ", cause);
                 }
                 WaarpSslUtility.closingSslChannel(ctx.channel());
             }

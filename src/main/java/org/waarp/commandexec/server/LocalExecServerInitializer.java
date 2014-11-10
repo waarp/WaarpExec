@@ -47,6 +47,7 @@ public class LocalExecServerInitializer extends ChannelInitializer<SocketChannel
 
     /**
      * Constructor with default delay
+     * 
      * @param eventExecutorGroup
      */
     public LocalExecServerInitializer(EventExecutorGroup eventExecutorGroup) {
@@ -56,6 +57,7 @@ public class LocalExecServerInitializer extends ChannelInitializer<SocketChannel
 
     /**
      * Constructor with a specific default delay
+     * 
      * @param newdelay
      * @param eventExecutor
      */
@@ -81,9 +83,10 @@ public class LocalExecServerInitializer extends ChannelInitializer<SocketChannel
         // Could change it with a new fixed delay if necessary at construction
         pipeline.addLast(eventExecutorGroup, "handler", new LocalExecServerHandler(this, delay));
     }
-    
+
     /**
      * Add a channel to the ExecClient Group
+     * 
      * @param channel
      */
     public void addChannel(Channel channel) {

@@ -20,7 +20,6 @@
  */
 package org.waarp.commandexec.server;
 
-
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
@@ -47,14 +46,16 @@ public class LocalExecServer {
 
     static EventLoopGroup bossGroup = new NioEventLoopGroup();
     static EventLoopGroup workerGroup = new NioEventLoopGroup();
-    static EventExecutorGroup executor = new DefaultEventExecutorGroup(DetectionUtils.numberThreads(), new WaarpThreadFactory("LocalExecServer"));
+    static EventExecutorGroup executor = new DefaultEventExecutorGroup(DetectionUtils.numberThreads(),
+            new WaarpThreadFactory("LocalExecServer"));
 
     /**
      * Takes 3 optional arguments:<br>
      * - no argument: implies 127.0.0.1 + 9999 port<br>
      * - arguments:<br>
-     *  "addresse" "port"<br>
-     *  "addresse" "port" "default delay"<br>
+     * "addresse" "port"<br>
+     * "addresse" "port" "default delay"<br>
+     * 
      * @param args
      * @throws Exception
      */
@@ -63,31 +64,31 @@ public class LocalExecServer {
         int port = 9999;
         InetAddress addr;
         long delay = LocalExecDefaultResult.MAXWAITPROCESS;
-        if (args.length >=2) {
+        if (args.length >= 2) {
             addr = InetAddress.getByName(args[0]);
             port = Integer.parseInt(args[1]);
             if (args.length > 2) {
                 delay = Long.parseLong(args[2]);
             }
         } else {
-            byte []loop = {127,0,0,1};
+            byte[] loop = { 127, 0, 0, 1 };
             addr = InetAddress.getByAddress(loop);
         }
         // Configure the server.
         try {
             ServerBootstrap bootstrap = new ServerBootstrap();
             WaarpNettyUtil.setServerBootstrap(bootstrap, bossGroup, workerGroup, 30000);
-    
+
             // Configure the pipeline factory.
             bootstrap.childHandler(new LocalExecServerInitializer(delay, executor));
-    
+
             // Bind and start to accept incoming connections only on local address.
             ChannelFuture future = bootstrap.bind(new InetSocketAddress(addr, port));
-            
+
             // Wait until the server socket is closed.
             future.channel().closeFuture().sync();
         } finally {
-         // Shut down all event loops to terminate all threads.
+            // Shut down all event loops to terminate all threads.
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
 

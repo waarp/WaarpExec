@@ -20,7 +20,6 @@
  */
 package org.waarp.commandexec.client;
 
-
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -45,7 +44,6 @@ public class LocalExecClientHandler extends SimpleChannelInboundHandler<String> 
     private static final WaarpLogger logger = WaarpLoggerFactory
             .getLogger(LocalExecClientHandler.class);
 
-
     protected LocalExecResult result;
     protected StringBuilder back;
     protected boolean firstMessage = true;
@@ -55,6 +53,7 @@ public class LocalExecClientHandler extends SimpleChannelInboundHandler<String> 
     protected String command;
     protected Channel channel;
     protected WaarpFuture ready = new WaarpFuture(true);
+
     /**
      * Constructor
      */
@@ -64,6 +63,7 @@ public class LocalExecClientHandler extends SimpleChannelInboundHandler<String> 
 
     /**
      * Initialize the client status for a new execution
+     * 
      * @param delay
      * @param command
      */
@@ -76,18 +76,18 @@ public class LocalExecClientHandler extends SimpleChannelInboundHandler<String> 
         this.command = command;
         // Sends the received line to the server.
         if (channel == null) {
-        	try {
-				ready.await();
-			} catch (InterruptedException e) {
-			}
+            try {
+                ready.await();
+            } catch (InterruptedException e) {
+            }
         }
-        logger.debug("write command: "+this.command);
+        logger.debug("write command: " + this.command);
         try {
-	        if (this.delay != 0) {
-	        	channel.writeAndFlush(this.delay+" "+this.command+"\n").await(30000);
-	        } else {
-	        	channel.writeAndFlush(this.command+"\n").await(30000);
-	        }
+            if (this.delay != 0) {
+                channel.writeAndFlush(this.delay + " " + this.command + "\n").await(30000);
+            } else {
+                channel.writeAndFlush(this.command + "\n").await(30000);
+            }
         } catch (InterruptedException e) {
         }
     }
@@ -107,7 +107,8 @@ public class LocalExecClientHandler extends SimpleChannelInboundHandler<String> 
      * Else if no error occurs => Set success to the future<br>
      *
      *
-     * @see io.netty.channel.SimpleChannelInboundHandler#channelClosed(io.netty.channel.ChannelHandlerContext, io.netty.channel.ChannelStateEvent)
+     * @see io.netty.channel.SimpleChannelInboundHandler#channelClosed(io.netty.channel.ChannelHandlerContext,
+     *      io.netty.channel.ChannelStateEvent)
      */
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
@@ -143,8 +144,10 @@ public class LocalExecClientHandler extends SimpleChannelInboundHandler<String> 
             this.future.setSuccess();
         }
     }
+
     /**
      * Waiting for the close of the exec
+     * 
      * @return The LocalExecResult
      */
     public LocalExecResult waitFor(long delay) {
@@ -156,12 +159,12 @@ public class LocalExecClientHandler extends SimpleChannelInboundHandler<String> 
         result.isSuccess = this.future.isSuccess();
         return result;
     }
-    
+
     /**
      * Action to do before close
      */
     public void actionBeforeClose(Channel channel) {
-    	// here nothing to do
+        // here nothing to do
     }
 
     @Override
@@ -175,48 +178,44 @@ public class LocalExecClientHandler extends SimpleChannelInboundHandler<String> 
                 result.status = Integer.parseInt(mesg.substring(0, pos));
             } catch (NumberFormatException e1) {
                 // Error
-            	logger.debug(this.command+":"+"Bad Transmission: "+mesg+"\n\t"+back.toString());
+                logger.debug(this.command + ":" + "Bad Transmission: " + mesg + "\n\t" + back.toString());
                 result.set(LocalExecDefaultResult.BadTransmition);
                 back.append(mesg);
                 actionBeforeClose(ctx.channel());
                 WaarpSslUtility.closingSslChannel(ctx.channel());
                 return;
             }
-            mesg = mesg.substring(pos+1);
+            mesg = mesg.substring(pos + 1);
             if (mesg.startsWith(LocalExecDefaultResult.ENDOFCOMMAND)) {
-                logger.debug(this.command+":"+"Receive End of Command");
+                logger.debug(this.command + ":" + "Receive End of Command");
                 result.result = LocalExecDefaultResult.NoMessage.result;
                 back.append(result.result);
                 this.finalizeMessage();
             } else {
-            	result.result = mesg;
-            	back.append(mesg);
+                result.result = mesg;
+                back.append(mesg);
             }
         } else if (mesg.startsWith(LocalExecDefaultResult.ENDOFCOMMAND)) {
-            logger.debug(this.command+":"+"Receive End of Command");
+            logger.debug(this.command + ":" + "Receive End of Command");
             this.finalizeMessage();
         } else {
-            back.append('\n');
-            back.append(mesg);
+            back.append('\n').append(mesg);
         }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.warn(this.command+":"+"Unexpected exception from Outband while get information: "+firstMessage,
+        logger.warn(this.command + ":" + "Unexpected exception from Outband while get information: " + firstMessage,
                 cause);
         if (firstMessage) {
             firstMessage = false;
             result.set(LocalExecDefaultResult.BadTransmition);
             result.exception = (Exception) cause;
-            back = new StringBuilder("Error in LocalExec: ");
-            back.append(result.exception.getMessage());
-            back.append('\n');
+            back = new StringBuilder("Error in LocalExec: ").append(result.exception.getMessage()).append('\n');
         } else {
             back.append("\nERROR while receiving answer: ");
             result.exception = (Exception) cause;
-            back.append(result.exception.getMessage());
-            back.append('\n');
+            back.append(result.exception.getMessage()).append('\n');
         }
         actionBeforeClose(ctx.channel());
         WaarpSslUtility.closingSslChannel(ctx.channel());

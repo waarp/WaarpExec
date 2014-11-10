@@ -63,13 +63,16 @@ public class LocalExecClientInitializer extends ChannelInitializer<SocketChannel
         LocalExecClientHandler localExecClientHandler = new LocalExecClientHandler(this);
         pipeline.addLast("handler", localExecClientHandler);
     }
+
     /**
      * Add a channel to the ExecClient Group
+     * 
      * @param channel
      */
     public void addChannel(Channel channel) {
         channelGroup.add(channel);
     }
+
     /**
      * Release internal resources
      */

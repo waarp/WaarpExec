@@ -32,7 +32,6 @@ import org.waarp.commandexec.client.LocalExecClientInitializer;
 import org.waarp.common.crypto.ssl.WaarpSslContextFactory;
 import org.waarp.common.utility.WaarpStringUtils;
 
-
 /**
  * Version with SSL support
  *

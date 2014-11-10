@@ -31,6 +31,7 @@ public class LocalExecResult {
     public boolean isSuccess;
     public Exception exception;
     public String result;
+
     /**
      * @param status
      * @param exception
@@ -45,6 +46,7 @@ public class LocalExecResult {
 
     /**
      * Constructor from a pre-existing LocalExecResult
+     * 
      * @param localExecResult
      */
     public LocalExecResult(LocalExecResult localExecResult) {
@@ -53,8 +55,10 @@ public class LocalExecResult {
         this.exception = localExecResult.exception;
         this.result = localExecResult.result;
     }
+
     /**
      * Set the values from a LocalExecResult (pointer copy)
+     * 
      * @param localExecResult
      */
     public void set(LocalExecResult localExecResult) {
@@ -69,7 +73,8 @@ public class LocalExecResult {
      */
     @Override
     public String toString() {
-        return "Status: "+status+" Output: "+result+(exception != null ? "\nError: "+exception.getMessage():"");
+        return "Status: " + status + " Output: " + result
+                + (exception != null ? "\nError: " + exception.getMessage() : "");
     }
 
 }

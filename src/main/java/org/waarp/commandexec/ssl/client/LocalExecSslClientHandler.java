@@ -31,7 +31,6 @@ import org.waarp.common.crypto.ssl.WaarpSslUtility;
 import org.waarp.common.logging.WaarpLogger;
 import org.waarp.common.logging.WaarpLoggerFactory;
 
-
 /**
  * @author Frederic Bregier
  *
@@ -42,6 +41,7 @@ public class LocalExecSslClientHandler extends LocalExecClientHandler {
      */
     private static final WaarpLogger logger = WaarpLoggerFactory
             .getLogger(LocalExecSslClientHandler.class);
+
     /**
      * @param factory
      */
@@ -57,25 +57,22 @@ public class LocalExecSslClientHandler extends LocalExecClientHandler {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.warn("Unexpected exception from Outband while get information: "+firstMessage,
+        logger.warn("Unexpected exception from Outband while get information: " + firstMessage,
                 cause);
         if (firstMessage) {
             firstMessage = false;
             result.set(LocalExecDefaultResult.BadTransmition);
             result.exception = (Exception) cause;
-            back = new StringBuilder("Error in LocalExec: ");
-            back.append(result.exception.getMessage());
-            back.append('\n');
+            back = new StringBuilder("Error in LocalExec: ").append(result.exception.getMessage()).append('\n');
         } else {
-        	if (cause instanceof SSLException) {
-        		// ignore ?
-        		logger.warn("Ignore exception ?", cause);
-        		return;
-        	}
+            if (cause instanceof SSLException) {
+                // ignore ?
+                logger.warn("Ignore exception ?", cause);
+                return;
+            }
             back.append("\nERROR while receiving answer: ");
             result.exception = (Exception) cause;
-            back.append(result.exception.getMessage());
-            back.append('\n');
+            back.append(result.exception.getMessage()).append('\n');
         }
         actionBeforeClose(ctx.channel());
         WaarpSslUtility.closingSslChannel(ctx.channel());

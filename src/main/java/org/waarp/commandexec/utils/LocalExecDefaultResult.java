@@ -22,6 +22,7 @@ package org.waarp.commandexec.utils;
 
 /**
  * Default message for LocalExec
+ * 
  * @author Frederic Bregier
  *
  */
@@ -34,8 +35,10 @@ public class LocalExecDefaultResult {
     public static LocalExecResult TimeOutExecution = new LocalExecResult(false, -6, null, "TimeOut Execution");
     public static LocalExecResult InternalError = new LocalExecResult(false, -7, null, "Internal Error");
     public static LocalExecResult NoStatus = new LocalExecResult(false, -8, null, "No Status");
-    public static LocalExecResult ConnectionRefused = new LocalExecResult(false, -9, null, "Exec Server refused the connection");
-    public static LocalExecResult ShutdownOnGoing = new LocalExecResult(false, -10, null, "Exec Server shutdown on going");
+    public static LocalExecResult ConnectionRefused = new LocalExecResult(false, -9, null,
+            "Exec Server refused the connection");
+    public static LocalExecResult ShutdownOnGoing = new LocalExecResult(false, -10, null,
+            "Exec Server shutdown on going");
     public static LocalExecResult CorrectExec = new LocalExecResult(false, 1, null, "Correctly Executed");
     public static long RETRYINMS = 500;
     public static long MAXWAITPROCESS = 60000;

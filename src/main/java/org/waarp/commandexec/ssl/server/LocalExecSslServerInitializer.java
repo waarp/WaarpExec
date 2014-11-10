@@ -33,7 +33,6 @@ import org.waarp.commandexec.server.LocalExecServerInitializer;
 import org.waarp.commandexec.utils.LocalExecDefaultResult;
 import org.waarp.common.crypto.ssl.WaarpSslContextFactory;
 
-
 /**
  * Version with SSL support
  *
@@ -43,29 +42,31 @@ import org.waarp.common.crypto.ssl.WaarpSslContextFactory;
 public class LocalExecSslServerInitializer extends LocalExecServerInitializer {
 
     private final WaarpSslContextFactory waarpSslContextFactory;
-    
+
     private long delay = LocalExecDefaultResult.MAXWAITPROCESS;
 
     /**
      * Constructor with default delay
+     * 
      * @param waarpSslContextFactory
      * @param omatpe
      */
     public LocalExecSslServerInitializer(WaarpSslContextFactory waarpSslContextFactory,
             EventExecutorGroup eventExecutorGroup) {
         // Default delay
-    	super(eventExecutorGroup);
+        super(eventExecutorGroup);
         this.waarpSslContextFactory = waarpSslContextFactory;
     }
 
     /**
      * Constructor with a specific default delay
+     * 
      * @param waarpSslContextFactory
      * @param newdelay
      */
-    public LocalExecSslServerInitializer(WaarpSslContextFactory waarpSslContextFactory, 
-    		long newdelay, EventExecutorGroup eventExecutorGroup) {
-    	super(eventExecutorGroup);
+    public LocalExecSslServerInitializer(WaarpSslContextFactory waarpSslContextFactory,
+            long newdelay, EventExecutorGroup eventExecutorGroup) {
+        super(eventExecutorGroup);
         delay = newdelay;
         this.waarpSslContextFactory = waarpSslContextFactory;
     }

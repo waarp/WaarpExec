@@ -23,13 +23,12 @@ package org.waarp.commandexec.ssl.server;
 import org.waarp.commandexec.server.LocalExecServerHandler;
 import org.waarp.commandexec.server.LocalExecServerInitializer;
 
-
 /**
  * @author Frederic Bregier
  *
  */
 public class LocalExecSslServerHandler extends LocalExecServerHandler {
-    
+
     /**
      * @param factory
      * @param newdelay
