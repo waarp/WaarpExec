@@ -33,10 +33,9 @@ import org.waarp.common.crypto.ssl.WaarpSslUtility;
 import org.waarp.common.logging.WaarpInternalLogger;
 import org.waarp.common.logging.WaarpInternalLoggerFactory;
 
-
 /**
  * @author Frederic Bregier
- *
+ * 
  */
 public class LocalExecSslClientHandler extends LocalExecClientHandler {
     /**
@@ -44,35 +43,36 @@ public class LocalExecSslClientHandler extends LocalExecClientHandler {
      */
     private static final WaarpInternalLogger logger = WaarpInternalLoggerFactory
             .getLogger(LocalExecSslClientHandler.class);
+
     /**
      * @param factory
      */
     public LocalExecSslClientHandler(LocalExecClientPipelineFactory factory) {
         super(factory);
     }
-    
-    @Override
-	public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-		WaarpSslUtility.addSslOpenedChannel(e.getChannel());
-		super.channelOpen(ctx, e);
-	}
 
-	/* (non-Javadoc)
+    @Override
+    public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+        WaarpSslUtility.addSslOpenedChannel(e.getChannel());
+        super.channelOpen(ctx, e);
+    }
+
+    /* (non-Javadoc)
      * @see org.jboss.netty.channel.SimpleChannelUpstreamHandler#channelConnected(org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.ChannelStateEvent)
      */
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e)
             throws Exception {
-    	WaarpSslUtility.setStatusSslConnectedChannel(e.getChannel(), true);
+        WaarpSslUtility.setStatusSslConnectedChannel(e.getChannel(), true);
         super.channelConnected(ctx, e);
     }
-    
+
     @Override
-	public void actionBeforeClose(Channel channel) {
-	}
+    public void actionBeforeClose(Channel channel) {
+    }
 
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-        logger.warn("Unexpected exception from downstream while get information: "+firstMessage,
+        logger.warn("Unexpected exception from downstream while get information: " + firstMessage,
                 e.getCause());
         if (firstMessage) {
             firstMessage = false;
@@ -82,11 +82,11 @@ public class LocalExecSslClientHandler extends LocalExecClientHandler {
             back.append(result.exception.getMessage());
             back.append('\n');
         } else {
-        	if (e.getCause() instanceof SSLException) {
-        		// ignore ?
-        		logger.warn("Ignore exception ?", e.getCause());
-        		return;
-        	}
+            if (e.getCause() instanceof SSLException) {
+                // ignore ?
+                logger.warn("Ignore exception ?", e.getCause());
+                return;
+            }
             back.append("\nERROR while receiving answer: ");
             result.exception = (Exception) e.getCause();
             back.append(result.exception.getMessage());

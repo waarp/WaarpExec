@@ -33,9 +33,9 @@ import org.jboss.netty.handler.codec.string.StringEncoder;
 
 /**
  * Creates a newly configured {@link ChannelPipeline} for a new channel for LocalExecClientTest.
- *
- *
- *
+ * 
+ * 
+ * 
  */
 public class LocalExecClientPipelineFactory implements ChannelPipelineFactory {
 
@@ -61,13 +61,16 @@ public class LocalExecClientPipelineFactory implements ChannelPipelineFactory {
 
         return pipeline;
     }
+
     /**
      * Add a channel to the ExecClient Group
+     * 
      * @param channel
      */
     public void addChannel(Channel channel) {
         channelGroup.add(channel);
     }
+
     /**
      * Release internal resources
      */

@@ -30,13 +30,12 @@ import org.jboss.netty.handler.ssl.SslHandler;
 import org.waarp.commandexec.client.LocalExecClientPipelineFactory;
 import org.waarp.common.crypto.ssl.WaarpSslContextFactory;
 
-
 /**
  * Version with SSL support
- *
- *
+ * 
+ * 
  * @author Frederic Bregier
- *
+ * 
  */
 public class LocalExecSslClientPipelineFactory extends LocalExecClientPipelineFactory {
 
@@ -67,6 +66,7 @@ public class LocalExecSslClientPipelineFactory extends LocalExecClientPipelineFa
 
         return pipeline;
     }
+
     /**
      * Release internal resources
      */

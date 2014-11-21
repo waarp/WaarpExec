@@ -20,7 +20,6 @@
  */
 package org.waarp.commandexec.server;
 
-
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutorService;
@@ -37,24 +36,25 @@ import org.waarp.common.utility.WaarpThreadFactory;
 
 /**
  * LocalExec server Main method.
- *
- *
+ * 
+ * 
  */
 public class LocalExecServer {
 
     static ExecutorService threadPool;
     static ExecutorService threadPool2;
-    static OrderedMemoryAwareThreadPoolExecutor pipelineExecutor = 
-    		new OrderedMemoryAwareThreadPoolExecutor(
-			1000, 0, 0, 200, TimeUnit.MILLISECONDS,
-			new WaarpThreadFactory("CommandExecutor"));
+    static OrderedMemoryAwareThreadPoolExecutor pipelineExecutor =
+            new OrderedMemoryAwareThreadPoolExecutor(
+                    1000, 0, 0, 200, TimeUnit.MILLISECONDS,
+                    new WaarpThreadFactory("CommandExecutor"));
 
     /**
      * Takes 3 optional arguments:<br>
      * - no argument: implies 127.0.0.1 + 9999 port<br>
      * - arguments:<br>
-     *  "addresse" "port"<br>
-     *  "addresse" "port" "default delay"<br>
+     * "addresse" "port"<br>
+     * "addresse" "port" "default delay"<br>
+     * 
      * @param args
      * @throws Exception
      */
@@ -63,14 +63,14 @@ public class LocalExecServer {
         int port = 9999;
         InetAddress addr;
         long delay = LocalExecDefaultResult.MAXWAITPROCESS;
-        if (args.length >=2) {
+        if (args.length >= 2) {
             addr = InetAddress.getByName(args[0]);
             port = Integer.parseInt(args[1]);
             if (args.length > 2) {
                 delay = Long.parseLong(args[2]);
             }
         } else {
-            byte []loop = {127,0,0,1};
+            byte[] loop = { 127, 0, 0, 1 };
             addr = InetAddress.getByAddress(loop);
         }
         threadPool = Executors.newCachedThreadPool();

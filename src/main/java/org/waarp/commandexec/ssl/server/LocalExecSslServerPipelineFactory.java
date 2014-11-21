@@ -34,39 +34,40 @@ import org.waarp.commandexec.server.LocalExecServerPipelineFactory;
 import org.waarp.commandexec.utils.LocalExecDefaultResult;
 import org.waarp.common.crypto.ssl.WaarpSslContextFactory;
 
-
 /**
  * Version with SSL support
- *
+ * 
  * @author Frederic Bregier
- *
+ * 
  */
 public class LocalExecSslServerPipelineFactory extends LocalExecServerPipelineFactory {
 
     private final WaarpSslContextFactory waarpSslContextFactory;
-    
+
     private long delay = LocalExecDefaultResult.MAXWAITPROCESS;
 
     /**
      * Constructor with default delay
+     * 
      * @param waarpSslContextFactory
      * @param omatpe
      */
     public LocalExecSslServerPipelineFactory(WaarpSslContextFactory waarpSslContextFactory,
-    		OrderedMemoryAwareThreadPoolExecutor omatpe) {
+            OrderedMemoryAwareThreadPoolExecutor omatpe) {
         // Default delay
-    	super(omatpe);
+        super(omatpe);
         this.waarpSslContextFactory = waarpSslContextFactory;
     }
 
     /**
      * Constructor with a specific default delay
+     * 
      * @param waarpSslContextFactory
      * @param newdelay
      */
-    public LocalExecSslServerPipelineFactory(WaarpSslContextFactory waarpSslContextFactory, 
-    		long newdelay, OrderedMemoryAwareThreadPoolExecutor omatpe) {
-    	super(omatpe);
+    public LocalExecSslServerPipelineFactory(WaarpSslContextFactory waarpSslContextFactory,
+            long newdelay, OrderedMemoryAwareThreadPoolExecutor omatpe) {
+        super(omatpe);
         delay = newdelay;
         this.waarpSslContextFactory = waarpSslContextFactory;
     }
