@@ -59,7 +59,7 @@ public class LocalExecServerInitializer extends ChannelInitializer<SocketChannel
      * Constructor with a specific default delay
      * 
      * @param newdelay
-     * @param eventExecutor
+     * @param eventExecutorGroup
      */
     public LocalExecServerInitializer(long newdelay,
             EventExecutorGroup eventExecutorGroup) {

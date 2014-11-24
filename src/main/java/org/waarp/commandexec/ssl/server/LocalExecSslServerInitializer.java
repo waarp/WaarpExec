@@ -49,7 +49,7 @@ public class LocalExecSslServerInitializer extends LocalExecServerInitializer {
      * Constructor with default delay
      * 
      * @param waarpSslContextFactory
-     * @param omatpe
+     * @param eventExecutorGroup
      */
     public LocalExecSslServerInitializer(WaarpSslContextFactory waarpSslContextFactory,
             EventExecutorGroup eventExecutorGroup) {

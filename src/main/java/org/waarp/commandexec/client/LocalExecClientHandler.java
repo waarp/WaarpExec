@@ -106,9 +106,6 @@ public class LocalExecClientHandler extends SimpleChannelInboundHandler<String> 
      * Else if an error was detected => Set the future to error (with or without exception)<br>
      * Else if no error occurs => Set success to the future<br>
      *
-     *
-     * @see io.netty.channel.SimpleChannelInboundHandler#channelClosed(io.netty.channel.ChannelHandlerContext,
-     *      io.netty.channel.ChannelStateEvent)
      */
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
