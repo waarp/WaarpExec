@@ -62,8 +62,8 @@ public class LocalExecSslClientHandler extends LocalExecClientHandler {
         if (firstMessage) {
             firstMessage = false;
             result.set(LocalExecDefaultResult.BadTransmition);
-            result.exception = (Exception) cause;
-            back = new StringBuilder("Error in LocalExec: ").append(result.exception.getMessage()).append('\n');
+            result.setException((Exception) cause);
+            back = new StringBuilder("Error in LocalExec: ").append(result.getException().getMessage()).append('\n');
         } else {
             if (cause instanceof SSLException) {
                 // ignore ?
@@ -71,8 +71,8 @@ public class LocalExecSslClientHandler extends LocalExecClientHandler {
                 return;
             }
             back.append("\nERROR while receiving answer: ");
-            result.exception = (Exception) cause;
-            back.append(result.exception.getMessage()).append('\n');
+            result.setException((Exception) cause);
+            back.append(result.getException().getMessage()).append('\n');
         }
         actionBeforeClose(ctx.channel());
         WaarpSslUtility.closingSslChannel(ctx.channel());

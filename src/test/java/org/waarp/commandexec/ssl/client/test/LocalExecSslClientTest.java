@@ -267,10 +267,10 @@ public class LocalExecSslClientTest extends Thread {
         clientHandler.initExecClient(0, line);
         // Wait for the end of the exec command
         LocalExecResult localExecResult = clientHandler.waitFor(10000);
-        int status = localExecResult.status;
+        int status = localExecResult.getStatus();
         if (status < 0) {
             System.err.println("Status: " + status + "\nResult: " +
-                    localExecResult.result);
+                    localExecResult.getResult());
             ko++;
         } else {
             ok++;
@@ -289,10 +289,10 @@ public class LocalExecSslClientTest extends Thread {
         clientHandler.initExecClient(-1000, "stop");
         // Wait for the end of the exec command
         LocalExecResult localExecResult = clientHandler.waitFor(10000);
-        int status = localExecResult.status;
+        int status = localExecResult.getStatus();
         if (status < 0) {
             System.err.println("Status: " + status + "\nResult: " +
-                    localExecResult.result);
+                    localExecResult.getResult());
             ko++;
         } else {
             ok++;

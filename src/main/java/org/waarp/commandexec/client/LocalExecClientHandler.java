@@ -129,11 +129,11 @@ public class LocalExecClientHandler extends SimpleChannelInboundHandler<String> 
         if (firstMessage) {
             result.set(LocalExecDefaultResult.NoMessage);
         } else {
-            result.result = back.toString();
+            result.setResult(back.toString());
         }
-        if (result.status < 0) {
-            if (result.exception != null) {
-                this.future.setFailure(result.exception);
+        if (result.getStatus() < 0) {
+            if (result.getException() != null) {
+                this.future.setFailure(result.getException());
             } else {
                 this.future.cancel();
             }
@@ -153,7 +153,7 @@ public class LocalExecClientHandler extends SimpleChannelInboundHandler<String> 
         } else {
             this.future.awaitUninterruptibly(delay);
         }
-        result.isSuccess = this.future.isSuccess();
+        result.setSuccess(this.future.isSuccess());
         return result;
     }
 
@@ -172,7 +172,7 @@ public class LocalExecClientHandler extends SimpleChannelInboundHandler<String> 
             firstMessage = false;
             int pos = mesg.indexOf(' ');
             try {
-                result.status = Integer.parseInt(mesg.substring(0, pos));
+                result.setStatus(Integer.parseInt(mesg.substring(0, pos)));
             } catch (NumberFormatException e1) {
                 // Error
                 logger.debug(this.command + ":" + "Bad Transmission: " + mesg + "\n\t" + back.toString());
@@ -185,11 +185,11 @@ public class LocalExecClientHandler extends SimpleChannelInboundHandler<String> 
             mesg = mesg.substring(pos + 1);
             if (mesg.startsWith(LocalExecDefaultResult.ENDOFCOMMAND)) {
                 logger.debug(this.command + ":" + "Receive End of Command");
-                result.result = LocalExecDefaultResult.NoMessage.result;
-                back.append(result.result);
+                result.setResult(LocalExecDefaultResult.NoMessage.getResult());
+                back.append(result.getResult());
                 this.finalizeMessage();
             } else {
-                result.result = mesg;
+                result.setResult(mesg);
                 back.append(mesg);
             }
         } else if (mesg.startsWith(LocalExecDefaultResult.ENDOFCOMMAND)) {
@@ -207,12 +207,12 @@ public class LocalExecClientHandler extends SimpleChannelInboundHandler<String> 
         if (firstMessage) {
             firstMessage = false;
             result.set(LocalExecDefaultResult.BadTransmition);
-            result.exception = (Exception) cause;
-            back = new StringBuilder("Error in LocalExec: ").append(result.exception.getMessage()).append('\n');
+            result.setException((Exception) cause);
+            back = new StringBuilder("Error in LocalExec: ").append(result.getException().getMessage()).append('\n');
         } else {
             back.append("\nERROR while receiving answer: ");
-            result.exception = (Exception) cause;
-            back.append(result.exception.getMessage()).append('\n');
+            result.setException((Exception) cause);
+            back.append(result.getException().getMessage()).append('\n');
         }
         actionBeforeClose(ctx.channel());
         WaarpSslUtility.closingSslChannel(ctx.channel());
