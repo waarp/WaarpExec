@@ -75,8 +75,8 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
      */
     public static boolean isShutdown(Channel channel) {
         if (isShutdown) {
-            channel.writeAndFlush(LocalExecDefaultResult.ConnectionRefused.status + " "
-                    + LocalExecDefaultResult.ConnectionRefused.result + "\n");
+            channel.writeAndFlush(LocalExecDefaultResult.ConnectionRefused.getStatus() + " "
+                    + LocalExecDefaultResult.ConnectionRefused.getResult() + "\n");
             try {
                 channel.writeAndFlush(LocalExecDefaultResult.ENDOFCOMMAND + "\n").await(30000);
             } catch (InterruptedException e) {
@@ -115,9 +115,6 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
             this.factory = factory;
         }
 
-        /* (non-Javadoc)
-         * @see java.lang.Thread#run()
-         */
         @Override
         public void run() {
             Timer timer = null;
@@ -143,11 +140,6 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
         private static final WaarpLogger logger = WaarpLoggerFactory
                 .getLogger(GGLETimerTask.class);
 
-        /*
-         * (non-Javadoc)
-         *
-         * @see java.util.TimerTask#run()
-         */
         @Override
         public void run() {
             logger.error("System will force EXIT");
@@ -196,14 +188,14 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
 
         // Generate and write a response.
         String response;
-        response = LocalExecDefaultResult.NoStatus.status + " " +
-                LocalExecDefaultResult.NoStatus.result;
+        response = LocalExecDefaultResult.NoStatus.getStatus() + " " +
+                LocalExecDefaultResult.NoStatus.getResult();
         ExecuteWatchdog watchdog = null;
         try {
             if (request.length() == 0) {
                 // No command
-                response = LocalExecDefaultResult.NoCommand.status + " " +
-                        LocalExecDefaultResult.NoCommand.result;
+                response = LocalExecDefaultResult.NoCommand.getStatus() + " " +
+                        LocalExecDefaultResult.NoCommand.getResult();
             } else {
                 String[] args = request.split(" ");
                 int cpt = 0;
@@ -218,8 +210,8 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
                     // Shutdown Order
                     isShutdown = true;
                     logger.warn("Shutdown order received");
-                    response = LocalExecDefaultResult.ShutdownOnGoing.status + " "
-                            + LocalExecDefaultResult.ShutdownOnGoing.result;
+                    response = LocalExecDefaultResult.ShutdownOnGoing.getStatus() + " "
+                            + LocalExecDefaultResult.ShutdownOnGoing.getResult();
                     Thread thread = new GGLEThreadShutdown(factory);
                     thread.start();
                     return;
@@ -230,8 +222,8 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
                     // If true file, is it executable
                     if (!exec.canExecute()) {
                         logger.error("Exec command is not executable: " + request);
-                        response = LocalExecDefaultResult.NotExecutable.status + " " +
-                                LocalExecDefaultResult.NotExecutable.result;
+                        response = LocalExecDefaultResult.NotExecutable.getStatus() + " " +
+                                LocalExecDefaultResult.NotExecutable.getResult();
                         return;
                     }
                 }
@@ -272,8 +264,8 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
                             }
                             logger.error("Exception: " + e.getMessage() +
                                     " Exec in error with " + commandLine.toString());
-                            response = LocalExecDefaultResult.BadExecution.status + " " +
-                                    LocalExecDefaultResult.BadExecution.result;
+                            response = LocalExecDefaultResult.BadExecution.getStatus() + " " +
+                                    LocalExecDefaultResult.BadExecution.getResult();
                             try {
                                 outputStream.close();
                             } catch (IOException e2) {
@@ -286,8 +278,8 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
                             }
                             logger.error("Exception: " + e.getMessage() +
                                     " Exec in error with " + commandLine.toString());
-                            response = LocalExecDefaultResult.BadExecution.status + " " +
-                                    LocalExecDefaultResult.BadExecution.result;
+                            response = LocalExecDefaultResult.BadExecution.getStatus() + " " +
+                                    LocalExecDefaultResult.BadExecution.getResult();
                             try {
                                 outputStream.close();
                             } catch (IOException e2) {
@@ -301,8 +293,8 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
                         }
                         logger.error("Exception: " + e.getMessage() +
                                 " Exec in error with " + commandLine.toString());
-                        response = LocalExecDefaultResult.BadExecution.status + " " +
-                                LocalExecDefaultResult.BadExecution.result;
+                        response = LocalExecDefaultResult.BadExecution.getStatus() + " " +
+                                LocalExecDefaultResult.BadExecution.getResult();
                         try {
                             outputStream.close();
                         } catch (IOException e2) {
@@ -316,8 +308,8 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
                     }
                     logger.error("Exception: " + e.getMessage() +
                             " Exec in error with " + commandLine.toString());
-                    response = LocalExecDefaultResult.BadExecution.status + " " +
-                            LocalExecDefaultResult.BadExecution.result;
+                    response = LocalExecDefaultResult.BadExecution.getStatus() + " " +
+                            LocalExecDefaultResult.BadExecution.getResult();
                     try {
                         outputStream.close();
                     } catch (IOException e2) {
@@ -332,8 +324,8 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
                         watchdog.killedProcess()) {
                     // kill by the watchdoc (time out)
                     logger.error("Exec is in Time Out");
-                    response = LocalExecDefaultResult.TimeOutExecution.status + " " +
-                            LocalExecDefaultResult.TimeOutExecution.result;
+                    response = LocalExecDefaultResult.TimeOutExecution.getStatus() + " " +
+                            LocalExecDefaultResult.TimeOutExecution.getResult();
                     try {
                         outputStream.close();
                     } catch (IOException e2) {
