@@ -242,10 +242,10 @@
 <a class="jxr_linenumber" name="L234" href="#L234">234</a>         clientHandler.initExecClient(0, line);
 <a class="jxr_linenumber" name="L235" href="#L235">235</a>         <em class="jxr_comment">// Wait for the end of the exec command</em>
 <a class="jxr_linenumber" name="L236" href="#L236">236</a>         LocalExecResult localExecResult = clientHandler.waitFor(10000);
-<a class="jxr_linenumber" name="L237" href="#L237">237</a>         <strong class="jxr_keyword">int</strong> status = localExecResult.status;
+<a class="jxr_linenumber" name="L237" href="#L237">237</a>         <strong class="jxr_keyword">int</strong> status = localExecResult.getStatus();
 <a class="jxr_linenumber" name="L238" href="#L238">238</a>         <strong class="jxr_keyword">if</strong> (status &lt; 0) {
 <a class="jxr_linenumber" name="L239" href="#L239">239</a>             System.err.println(line + <span class="jxr_string">" Status: "</span> + status + <span class="jxr_string">"\tResult: "</span> +
-<a class="jxr_linenumber" name="L240" href="#L240">240</a>                     localExecResult.result);
+<a class="jxr_linenumber" name="L240" href="#L240">240</a>                     localExecResult.getResult());
 <a class="jxr_linenumber" name="L241" href="#L241">241</a>             ko++;
 <a class="jxr_linenumber" name="L242" href="#L242">242</a>         } <strong class="jxr_keyword">else</strong> {
 <a class="jxr_linenumber" name="L243" href="#L243">243</a>             ok++;
@@ -264,10 +264,10 @@
 <a class="jxr_linenumber" name="L256" href="#L256">256</a>         clientHandler.initExecClient(-1000, <span class="jxr_string">"stop"</span>);
 <a class="jxr_linenumber" name="L257" href="#L257">257</a>         <em class="jxr_comment">// Wait for the end of the exec command</em>
 <a class="jxr_linenumber" name="L258" href="#L258">258</a>         LocalExecResult localExecResult = clientHandler.waitFor(10000);
-<a class="jxr_linenumber" name="L259" href="#L259">259</a>         <strong class="jxr_keyword">int</strong> status = localExecResult.status;
+<a class="jxr_linenumber" name="L259" href="#L259">259</a>         <strong class="jxr_keyword">int</strong> status = localExecResult.getStatus();
 <a class="jxr_linenumber" name="L260" href="#L260">260</a>         <strong class="jxr_keyword">if</strong> (status &lt; 0) {
 <a class="jxr_linenumber" name="L261" href="#L261">261</a>             System.err.println(<span class="jxr_string">"Shutdown Status: "</span> + status + <span class="jxr_string">"\nResult: "</span> +
-<a class="jxr_linenumber" name="L262" href="#L262">262</a>                     localExecResult.result);
+<a class="jxr_linenumber" name="L262" href="#L262">262</a>                     localExecResult.getResult());
 <a class="jxr_linenumber" name="L263" href="#L263">263</a>             ko++;
 <a class="jxr_linenumber" name="L264" href="#L264">264</a>         } <strong class="jxr_keyword">else</strong> {
 <a class="jxr_linenumber" name="L265" href="#L265">265</a>             ok++;
@@ -277,6 +277,6 @@
 <a class="jxr_linenumber" name="L269" href="#L269">269</a> }
 </pre>
 <hr/>
-<div id="footer">Copyright &#169; 2009&#x2013;2014 <a href="http://www.waarp.it">Waarp</a>. All rights reserved.</div>
+<div id="footer">Copyright &#169; 2009&#x2013;2016 <a href="http://www.waarp.it">Waarp</a>. All rights reserved.</div>
 </body>
 </html>
