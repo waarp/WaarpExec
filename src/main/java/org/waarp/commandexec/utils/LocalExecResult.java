@@ -27,10 +27,10 @@ package org.waarp.commandexec.utils;
  *
  */
 public class LocalExecResult {
-    public int status;
-    public boolean isSuccess;
-    public Exception exception;
-    public String result;
+    private int status;
+    private boolean isSuccess;
+    private Exception exception;
+    private String result;
 
     /**
      * @param status
@@ -38,10 +38,10 @@ public class LocalExecResult {
      * @param result
      */
     public LocalExecResult(boolean isSuccess, int status, Exception exception, String result) {
-        this.isSuccess = isSuccess;
-        this.status = status;
-        this.exception = exception;
-        this.result = result;
+        this.setSuccess(isSuccess);
+        this.setStatus(status);
+        this.setException(exception);
+        this.setResult(result);
     }
 
     /**
@@ -50,10 +50,10 @@ public class LocalExecResult {
      * @param localExecResult
      */
     public LocalExecResult(LocalExecResult localExecResult) {
-        this.isSuccess = localExecResult.isSuccess;
-        this.status = localExecResult.status;
-        this.exception = localExecResult.exception;
-        this.result = localExecResult.result;
+        this.setSuccess(localExecResult.isSuccess());
+        this.setStatus(localExecResult.getStatus());
+        this.setException(localExecResult.getException());
+        this.setResult(localExecResult.getResult());
     }
 
     /**
@@ -62,19 +62,72 @@ public class LocalExecResult {
      * @param localExecResult
      */
     public void set(LocalExecResult localExecResult) {
-        this.isSuccess = localExecResult.isSuccess;
-        this.status = localExecResult.status;
-        this.exception = localExecResult.exception;
-        this.result = localExecResult.result;
+        this.setSuccess(localExecResult.isSuccess());
+        this.setStatus(localExecResult.getStatus());
+        this.setException(localExecResult.getException());
+        this.setResult(localExecResult.getResult());
     }
 
-    /* (non-Javadoc)
-     * @see java.lang.Object#toString()
-     */
     @Override
     public String toString() {
-        return "Status: " + status + " Output: " + result
-                + (exception != null ? "\nError: " + exception.getMessage() : "");
+        return "Status: " + getStatus() + " Output: " + getResult()
+                + (getException() != null ? "\nError: " + getException().getMessage() : "");
+    }
+
+    /**
+     * @return the status
+     */
+    public int getStatus() {
+        return status;
+    }
+
+    /**
+     * @param status the status to set
+     */
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    /**
+     * @return the isSuccess
+     */
+    public boolean isSuccess() {
+        return isSuccess;
+    }
+
+    /**
+     * @param isSuccess the isSuccess to set
+     */
+    public void setSuccess(boolean isSuccess) {
+        this.isSuccess = isSuccess;
+    }
+
+    /**
+     * @return the exception
+     */
+    public Exception getException() {
+        return exception;
+    }
+
+    /**
+     * @param exception the exception to set
+     */
+    public void setException(Exception exception) {
+        this.exception = exception;
+    }
+
+    /**
+     * @return the result
+     */
+    public String getResult() {
+        return result;
+    }
+
+    /**
+     * @param result the result to set
+     */
+    public void setResult(String result) {
+        this.result = result;
     }
 
 }
