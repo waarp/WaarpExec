@@ -5,8 +5,8 @@
    tags. See the COPYRIGHT.txt in the distribution for a full listing of
    individual contributors.
 
-   All Waarp Project is free software: you can redistribute it and/or 
-   modify it under the terms of the GNU General Public License as published 
+   All Waarp Project is free software: you can redistribute it and/or
+   modify it under the terms of the GNU General Public License as published
    by the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
@@ -66,7 +66,7 @@ public class LocalExecClientInitializer extends ChannelInitializer<SocketChannel
 
     /**
      * Add a channel to the ExecClient Group
-     * 
+     *
      * @param channel
      */
     public void addChannel(Channel channel) {
