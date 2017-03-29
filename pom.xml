@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>WaarpExec</artifactId>
   <packaging>jar</packaging>
-  <version>3.0.1</version>
+  <version>3.0.2</version>
   <name>WaarpExec</name>
   <description>The Waarp Exec project is about a Daemon for local execution of system commands
   (as System.exec) but through client/server model and not within the same JVM.</description>
@@ -46,7 +46,7 @@
   	<dependency>
   		<groupId>Waarp</groupId>
   		<artifactId>WaarpCommon</artifactId>
-  		<version>3.0.7</version>
+  		<version>3.0.8</version>
   		<exclusions>
   			<exclusion>
   				<artifactId>xom</artifactId>
