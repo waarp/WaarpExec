@@ -45,6 +45,7 @@ import org.waarp.commandexec.utils.LocalExecDefaultResult;
 import org.waarp.common.crypto.ssl.WaarpSslUtility;
 import org.waarp.common.logging.WaarpLogger;
 import org.waarp.common.logging.WaarpLoggerFactory;
+import org.waarp.common.utility.DetectionUtils;
 import org.waarp.common.utility.WaarpStringUtils;
 
 /**
@@ -87,6 +88,10 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
         return false;
     }
 
+    public static void junitSetNotShutdown() {
+        isShutdown = false;
+    }
+
     /**
      * Print stack trace
      * 
@@ -122,7 +127,7 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
             GGLETimerTask ggleTimerTask = new GGLETimerTask();
             timer.schedule(ggleTimerTask, delay);
             factory.releaseResources();
-            System.exit(0);
+            DetectionUtils.SystemExit(0);
         }
 
     }
@@ -148,7 +153,7 @@ public class LocalExecServerHandler extends SimpleChannelInboundHandler<String> 
             for (Thread thread : map.keySet()) {
                 printStackTrace(thread, map.get(thread));
             }
-            System.exit(0);
+            DetectionUtils.SystemExit(0);
         }
     }
 
